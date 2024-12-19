@@ -13,6 +13,8 @@ import {
   Plus,
   CheckCircle,
   XCircle,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { openDB } from "idb";
 import { saveAs } from "file-saver";
@@ -57,7 +59,14 @@ interface SearchState {
 
 const LibraryManagementSystem: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    "books" | "users" | "rentals" | "rentalHistory" | "unreturned" | "backup"
+    | "books"
+    | "users"
+    | "rentals"
+    | "rentalHistory"
+    | "unreturned"
+    | "backup"
+    | "returned"
+    | "admin"
   >("books");
 
   // Initialize state with localStorage
@@ -103,6 +112,10 @@ const LibraryManagementSystem: React.FC = () => {
     type: "id",
     query: "",
   });
+  const [returnedBooksSearch, setReturnedBooksSearch] = useState<SearchState>({
+    type: "id",
+    query: "",
+  });
 
   // Modal states
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
@@ -113,6 +126,8 @@ const LibraryManagementSystem: React.FC = () => {
   const [isRentVerificationModalOpen, setIsRentVerificationModalOpen] =
     useState(false);
   const [isDeleteBookModalOpen, setIsDeleteBookModalOpen] = useState(false);
+  const [isReturnBookModalOpen, setIsReturnBookModalOpen] = useState(false);
+  const [isDeleteUserModalOpen, setIsDeleteUserModalOpen] = useState(false);
   const [currentBook, setCurrentBook] = useState<Book | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
@@ -122,9 +137,14 @@ const LibraryManagementSystem: React.FC = () => {
   const [rentVerificationUserId, setRentVerificationUserId] = useState("");
   const [customReturnDate, setCustomReturnDate] = useState(""); // State for custom return date
 
+  // Admin Panel State
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+
   // Load data from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const localStorageBooks = localStorage.getItem("library-books");
       const localStorageUsers = localStorage.getItem("library-users");
       const localStorageRentals = localStorage.getItem("library-rentals");
@@ -139,32 +159,35 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Save to localStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem("library-books", JSON.stringify(books));
       saveToDB("books", books);
     }
   }, [books]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem("library-users", JSON.stringify(users));
       saveToDB("users", users);
     }
   }, [users]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.setItem("library-rentals", JSON.stringify(rentals));
       saveToDB("rentals", rentals);
     }
   }, [rentals]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const currentTime = new Date().getTime();
-      const oneDayInMillis = 24 * 60 * 60 * 1000;
+      const twelveHoursInMillis = 12 * 60 * 60 * 1000;
 
-      if (lastBackupTime && currentTime - lastBackupTime < oneDayInMillis) {
+      if (
+        lastBackupTime &&
+        currentTime - lastBackupTime < twelveHoursInMillis
+      ) {
         return;
       }
 
@@ -330,6 +353,12 @@ const LibraryManagementSystem: React.FC = () => {
     return result.map((item) => item.item);
   };
 
+  const searchReturnedBooks = (rentals: Rental[]): Rental[] => {
+    if (!returnedBooksSearch.query) return rentals;
+    const result = fuseRentals.search(returnedBooksSearch.query);
+    return result.map((item) => item.item);
+  };
+
   // Book Management Functions
   const addBook = (book: Book) => {
     const newBook = { ...book, id: generateNumericId(books) };
@@ -376,7 +405,16 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   const deleteUser = (userId: number) => {
-    setUsers(users.filter((user) => user.id !== userId));
+    setSelectedUser(users.find((user) => user.id === userId) || null);
+    setIsDeleteUserModalOpen(true);
+  };
+
+  const confirmDeleteUser = () => {
+    if (selectedUser) {
+      setUsers(users.filter((user) => user.id !== selectedUser.id));
+      setIsDeleteUserModalOpen(false);
+      setSelectedUser(null);
+    }
   };
 
   // Rental Management Functions
@@ -429,7 +467,33 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   const deleteRental = (rentalId: number) => {
-    setRentals(rentals.filter((rental) => rental.id !== rentalId));
+    const rental = rentals.find((r) => r.id === rentalId);
+    if (rental) {
+      // Update the book's available copies
+      setBooks(
+        books.map((book) =>
+          book.id === rental.bookId
+            ? { ...book, availableCopies: book.availableCopies + 1 }
+            : book
+        )
+      );
+
+      // Update the user's current rentals
+      setUsers(
+        users.map((user) =>
+          user.id === rental.userId
+            ? {
+                ...user,
+                currentRentals: user.currentRentals.filter(
+                  (bookId) => bookId !== rental.bookId
+                ),
+              }
+            : user
+        )
+      );
+
+      setRentals(rentals.filter((rental) => rental.id !== rentalId));
+    }
   };
 
   const verifyAndDeleteRental = () => {
@@ -463,6 +527,112 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
+  // Return Book Function
+  const returnBook = (rentalId: number) => {
+    const rental = rentals.find((r) => r.id === rentalId);
+    if (rental) {
+      // Update the book's available copies
+      setBooks(
+        books.map((book) =>
+          book.id === rental.bookId
+            ? { ...book, availableCopies: book.availableCopies + 1 }
+            : book
+        )
+      );
+
+      // Update the user's current rentals
+      setUsers(
+        users.map((user) =>
+          user.id === rental.userId
+            ? {
+                ...user,
+                currentRentals: user.currentRentals.filter(
+                  (bookId) => bookId !== rental.bookId
+                ),
+              }
+            : user
+        )
+      );
+
+      // Update the rental's return date
+      setRentals(
+        rentals.map((r) =>
+          r.id === rentalId ? { ...r, returnDate: new Date().toISOString() } : r
+        )
+      );
+    }
+  };
+
+  // Undo Return Book Function
+  const undoReturnBook = (rentalId: number) => {
+    const rental = rentals.find((r) => r.id === rentalId);
+    if (rental) {
+      // Update the book's available copies
+      setBooks(
+        books.map((book) =>
+          book.id === rental.bookId
+            ? { ...book, availableCopies: book.availableCopies - 1 }
+            : book
+        )
+      );
+
+      // Update the user's current rentals
+      setUsers(
+        users.map((user) =>
+          user.id === rental.userId
+            ? {
+                ...user,
+                currentRentals: [...user.currentRentals, rental.bookId],
+              }
+            : user
+        )
+      );
+
+      // Update the rental's return date
+      setRentals(
+        rentals.map((r) =>
+          r.id === rentalId ? { ...r, returnDate: undefined } : r
+        )
+      );
+    }
+  };
+
+  // Confirm Return Book Function
+  const confirmReturnBook = (rentalId: number) => {
+    const rental = rentals.find((r) => r.id === rentalId);
+    if (rental) {
+      // Update the book's available copies
+      setBooks(
+        books.map((book) =>
+          book.id === rental.bookId
+            ? { ...book, availableCopies: book.availableCopies + 1 }
+            : book
+        )
+      );
+
+      // Update the user's current rentals
+      setUsers(
+        users.map((user) =>
+          user.id === rental.userId
+            ? {
+                ...user,
+                currentRentals: user.currentRentals.filter(
+                  (bookId) => bookId !== rental.bookId
+                ),
+              }
+            : user
+        )
+      );
+
+      // Update the rental's return date
+      setRentals(
+        rentals.map((r) =>
+          r.id === rentalId ? { ...r, returnDate: new Date().toISOString() } : r
+        )
+      );
+    }
+  };
+
   // Generate Numeric ID
   const generateNumericId = (items: any[]): number => {
     if (items.length === 0) return 1;
@@ -488,8 +658,11 @@ const LibraryManagementSystem: React.FC = () => {
   const createBackup = () => {
     const currentDate = new Date();
     const day = currentDate.getDate();
-    const time = currentDate.toLocaleTimeString();
-    const filename = `backup day (${day})-${time}.json`;
+    const time = currentDate.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const filename = `backup-${day}-${time}.json`;
 
     const data = { books, users, rentals };
     const jsonString = JSON.stringify(data, null, 2);
@@ -503,7 +676,7 @@ const LibraryManagementSystem: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       createBackup();
-    }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+    }, 12 * 60 * 60 * 1000); // 12 hours in milliseconds
     setBackupInterval(interval);
 
     return () => {
@@ -511,6 +684,25 @@ const LibraryManagementSystem: React.FC = () => {
         clearInterval(backupInterval);
       }
     };
+  }, []);
+
+  // Remove returned books from rental history after 2 days
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentTime = new Date().getTime();
+      const twoDaysInMillis = 2 * 24 * 60 * 60 * 1000;
+
+      setRentals((prevRentals) =>
+        prevRentals.filter(
+          (rental) =>
+            !rental.returnDate ||
+            currentTime - new Date(rental.returnDate).getTime() <
+              twoDaysInMillis
+        )
+      );
+    }, 24 * 60 * 60 * 1000); // Check every 24 hours
+
+    return () => clearInterval(interval);
   }, []);
 
   // Render Book Search
@@ -870,6 +1062,51 @@ const LibraryManagementSystem: React.FC = () => {
     );
   };
 
+  // Render Delete User Modal
+  const renderDeleteUserModal = () => {
+    if (!isDeleteUserModalOpen) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+      >
+        <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md shadow-lg text-white">
+          <h2 className="text-2xl font-bold mb-4">Verify Deletion</h2>
+          <p className="mb-4">
+            Please enter the user ID to verify the deletion.
+          </p>
+          <input
+            type="text"
+            placeholder="Enter User ID"
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+            value={verificationUserId}
+            onChange={(e) => setVerificationUserId(e.target.value)}
+            required
+          />
+          <div className="flex justify-between">
+            <button
+              type="button"
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              onClick={confirmDeleteUser}
+            >
+              Delete
+            </button>
+            <button
+              type="button"
+              className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              onClick={() => setIsDeleteUserModalOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   // Render Rental Modal
   const renderRentalModal = () => {
     if (!isRentalModalOpen) return null;
@@ -972,14 +1209,14 @@ const LibraryManagementSystem: React.FC = () => {
             onChange={(e) => setRentVerificationUserId(e.target.value)}
             required
           />
-        <input
-  type="date"
-  placeholder="Custom Return Date"
-  className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white placeholder-gray-400 transition-all duration-200"
-  value={customReturnDate}
-  onChange={(e) => setCustomReturnDate(e.target.value)}
-  required
-/>
+          <input
+            type="date"
+            placeholder="Custom Return Date"
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white placeholder-white transition-all duration-200"
+            value={customReturnDate}
+            onChange={(e) => setCustomReturnDate(e.target.value)}
+            required
+          />
 
           <div className="flex justify-between">
             <button
@@ -1040,6 +1277,49 @@ const LibraryManagementSystem: React.FC = () => {
               onClick={() => setIsDeleteRentalModalOpen(false)}
             >
               Cancel
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Render Return Book Modal
+  const renderReturnBookModal = () => {
+    if (!isReturnBookModalOpen || !selectedRental) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+      >
+        <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md shadow-lg text-white">
+          <h2 className="text-2xl font-bold mb-4">Return Book</h2>
+          <p className="mb-4">Please verify the return of the book.</p>
+          <input
+            type="text"
+            placeholder="Enter User ID"
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+            value={verificationUserId}
+            onChange={(e) => setVerificationUserId(e.target.value)}
+            required
+          />
+          <div className="flex justify-between">
+            <button
+              type="button"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+              onClick={() => confirmReturnBook(selectedRental.id)}
+            >
+              Confirm Return
+            </button>
+            <button
+              type="button"
+              className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              onClick={() => setIsReturnBookModalOpen(false)}
+            >
+              Close
             </button>
           </div>
         </div>
@@ -1150,70 +1430,326 @@ const LibraryManagementSystem: React.FC = () => {
     );
   };
 
+  // Render Admin Panel
+  const renderAdminPanel = () => (
+    <div className="bg-gray-900 p-6 rounded-lg">
+      <h2 className="text-3xl font-bold mb-6 text-white">Admin Panel</h2>
+      {!isAdminAuthenticated ? (
+        <div>
+          <input
+            type="password"
+            placeholder="Enter Admin Password"
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+            required
+          />
+          <button
+            type="button"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            onClick={() => {
+              if (adminPassword === "admin123") {
+                setIsAdminAuthenticated(true);
+              } else {
+                alert("Incorrect password. Please try again.");
+              }
+            }}
+          >
+            Login
+          </button>
+        </div>
+      ) : (
+        <div>
+          <button
+            type="button"
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4"
+            onClick={() => setIsAdminAuthenticated(false)}
+          >
+            Logout
+          </button>
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Manage Users
+          </h3>
+          <div className="mb-4">
+            <button
+              onClick={() => {
+                setCurrentUser({
+                  id: 0,
+                  name: "",
+                  email: "",
+                  membershipDate: new Date().toISOString(),
+                  currentRentals: [],
+                  class: "",
+                });
+                setIsUserModalOpen(true);
+              }}
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
+            >
+              <Plus className="mr-2" /> Add User
+            </button>
+            <table className="w-full border rounded-xl shadow-md bg-gray-800">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="p-3 border text-white">ID</th>
+                  <th className="p-3 border text-white">Name</th>
+                  <th className="p-3 border text-white">Email</th>
+                  <th className="p-3 border text-white">Class</th>
+                  <th className="p-3 border text-white">Membership Date</th>
+                  <th className="p-3 border text-white">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {searchUsers(users).map((user) => (
+                  <tr key={user.id} className="hover:bg-gray-600">
+                    <td className="p-3 border text-white">{user.id}</td>
+                    <td className="p-3 border text-white">{user.name}</td>
+                    <td className="p-3 border text-white">{user.email}</td>
+                    <td className="p-3 border text-white">{user.class}</td>
+                    <td className="p-3 border text-white">
+                      {new Date(user.membershipDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 border text-center">
+                      <button
+                        onClick={() => {
+                          setCurrentUser(user);
+                          setIsUserModalOpen(true);
+                        }}
+                        className="text-blue-500 mr-2 hover:text-blue-600"
+                      >
+                        <Edit className="mr-1" /> Edit
+                      </button>
+                      <button
+                        onClick={() => deleteUser(user.id)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <Trash className="mr-1" /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Manage Books
+          </h3>
+          <div className="mb-4">
+            <button
+              onClick={() => {
+                setCurrentBook({
+                  id: 0,
+                  title: "",
+                  author: "",
+                  isbn: "",
+                  genre: "",
+                  totalCopies: 0,
+                  availableCopies: 0,
+                });
+                setIsBookModalOpen(true);
+              }}
+              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
+            >
+              <Plus className="mr-2" /> Add Book
+            </button>
+            <table className="w-full border rounded-xl shadow-md bg-gray-800">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="p-3 border text-white">ID</th>
+                  <th className="p-3 border text-white">Title</th>
+                  <th className="p-3 border text-white">Author</th>
+                  <th className="p-3 border text-white">ISBN</th>
+                  <th className="p-3 border text-white">Genre</th>
+                  <th className="p-3 border text-white">Total Copies</th>
+                  <th className="p-3 border text-white">Available</th>
+                  <th className="p-3 border text-white">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {searchBooks(books).map((book) => (
+                  <tr key={book.id} className="hover:bg-gray-600">
+                    <td className="p-3 border text-white">{book.id}</td>
+                    <td className="p-3 border text-white">{book.title}</td>
+                    <td className="p-3 border text-white">{book.author}</td>
+                    <td className="p-3 border text-white">{book.isbn}</td>
+                    <td className="p-3 border text-white">{book.genre}</td>
+                    <td className="p-3 border text-center text-white">
+                      {book.totalCopies}
+                    </td>
+                    <td className="p-3 border text-center text-white">
+                      {book.availableCopies}
+                    </td>
+                    <td className="p-3 border text-center">
+                      <button
+                        onClick={() => {
+                          setCurrentBook(book);
+                          setIsBookModalOpen(true);
+                        }}
+                        className="text-blue-500 mr-2 hover:text-blue-600"
+                      >
+                        <Edit className="mr-1" /> Edit
+                      </button>
+                      <button
+                        onClick={() => deleteBook(book.id)}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <Trash className="mr-1" /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Manage Rentals
+          </h3>
+          <div className="mb-4">
+            <table className="w-full border rounded-xl shadow-md bg-gray-800">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="p-3 border text-white">ID</th>
+                  <th className="p-3 border text-white">Book ID</th>
+                  <th className="p-3 border text-white">User ID</th>
+                  <th className="p-3 border text-white">Rental Date</th>
+                  <th className="p-3 border text-white">Due Date</th>
+                  <th className="p-3 border text-white">Return Date</th>
+                  <th className="p-3 border text-white">Custom Return Date</th>
+                  <th className="p-3 border text-white">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rentals.map((rental) => (
+                  <tr key={rental.id} className="hover:bg-gray-600">
+                    <td className="p-3 border text-white">{rental.id}</td>
+                    <td className="p-3 border text-white">{rental.bookId}</td>
+                    <td className="p-3 border text-white">{rental.userId}</td>
+                    <td className="p-3 border text-white">
+                      {new Date(rental.rentalDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 border text-white">
+                      {new Date(rental.dueDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 border text-white">
+                      {rental.returnDate
+                        ? new Date(rental.returnDate).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="p-3 border text-white">
+                      {rental.customReturnDate
+                        ? new Date(rental.customReturnDate).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="p-3 border text-center">
+                      <button
+                        onClick={() => {
+                          setSelectedRental(rental);
+                          setIsDeleteRentalModalOpen(true);
+                        }}
+                        className="text-red-500 hover:text-red-600"
+                      >
+                        <Trash className="mr-1" /> Delete
+                      </button>
+                      {!rental.returnDate && (
+                        <button
+                          onClick={() => {
+                            setSelectedRental(rental);
+                            setIsReturnBookModalOpen(true);
+                          }}
+                          className="text-blue-500 hover:text-blue-600 ml-2"
+                        >
+                          Return
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   // Render Rentals Tab
   const renderRentalsTab = () => (
-    <div>
+    <div className="bg-gray-900 p-6 rounded-lg">
       <h2 className="text-3xl font-bold mb-6 text-white">Book Rentals</h2>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Available Books Section */}
         <div>
           <h3 className="text-2xl font-semibold mb-4 text-white">
             Available Books
           </h3>
-          <div className="border rounded-xl max-h-96 overflow-y-auto shadow-md p-4 bg-gray-700">
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
             {renderAvailableBookSearch()}
-            {searchAvailableBooks(books)
-              .filter((book) => book.availableCopies > 0)
-              .map((book) => (
-                <div
-                  key={book.id}
-                  className="p-3 border-b hover:bg-gray-600 flex justify-between items-center"
-                >
-                  <div>
-                    <p className="font-medium text-lg text-white">
-                      {book.title}
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      {book.author} | Available: {book.availableCopies}
-                    </p>
-                  </div>
-                  <button
-                    className="bg-green-500 text-white px-3 py-1 rounded-md text-sm hover:bg-green-600"
-                    onClick={() => {
-                      setSelectedBook(book);
-                      setIsRentalModalOpen(true);
-                    }}
+            <div className="max-h-[calc(100vh-400px)] overflow-y-auto p-4">
+              {searchAvailableBooks(books)
+                .filter((book) => book.availableCopies > 0)
+                .map((book) => (
+                  <div
+                    key={book.id}
+                    className="bg-gray-700 mb-3 last:mb-0 p-4 rounded-lg hover:bg-gray-650 transition-colors"
                   >
-                    Rent
-                  </button>
-                </div>
-              ))}
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-lg text-white">
+                          {book.title}
+                        </p>
+                        <p className="text-gray-300">
+                          {book.author} •{" "}
+                          <span className="text-green-400">
+                            {book.availableCopies} available
+                          </span>
+                        </p>
+                      </div>
+                      <button
+                        className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors"
+                        onClick={() => {
+                          setSelectedBook(book);
+                          setIsRentalModalOpen(true);
+                        }}
+                      >
+                        Rent
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
 
+        {/* Users Section */}
         <div>
           <h3 className="text-2xl font-semibold mb-4 text-white">Users</h3>
           {renderRentalUserSearch()}
-          <div className="border rounded-xl max-h-96 overflow-y-auto shadow-md p-4 bg-gray-700">
-            {searchRentalUsers(users).map((user) => (
-              <div key={user.id} className="p-3 border-b hover:bg-gray-600">
-                <p className="font-medium text-lg text-white">{user.name}</p>
-                <p className="text-sm text-gray-400">{user.email}</p>
-                <div className="mt-2 flex justify-between items-center">
-                  <span className="text-sm text-gray-400">
-                    Current Rentals: {user.currentRentals.length}
-                  </span>
-                  <button
-                    className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-600"
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setIsViewRentalsModalOpen(true);
-                    }}
-                  >
-                    View Rentals
-                  </button>
+          <div className="bg-gray-800 rounded-lg overflow-hidden">
+            <div className="max-h-[calc(100vh-400px)] overflow-y-auto p-4">
+              {searchRentalUsers(users).map((user) => (
+                <div
+                  key={user.id}
+                  className="bg-gray-700 mb-3 last:mb-0 p-4 rounded-lg hover:bg-gray-650 transition-colors"
+                >
+                  <p className="font-medium text-lg text-white">{user.name}</p>
+                  <p className="text-gray-300">{user.email}</p>
+                  <div className="mt-3 flex justify-between items-center">
+                    <span className="text-gray-300">
+                      Current Rentals: {user.currentRentals.length}
+                    </span>
+                    <button
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setIsViewRentalsModalOpen(true);
+                      }}
+                    >
+                      View Rentals
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -1222,53 +1758,60 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Render Available Book Search
   const renderAvailableBookSearch = () => (
-    <div className="flex flex-col md:flex-row items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
-      <select
-        value={availableBookSearch.type}
-        onChange={(e) =>
-          setAvailableBookSearch({
-            ...availableBookSearch,
-            type: e.target.value as "id" | "name",
-          })
-        }
-        className="border p-2 rounded-md w-full md:w-auto hover:border-blue-500 focus:border-blue-500 bg-gray-800 text-white"
-      >
-        <option value="id">Search by ID</option>
-        <option value="name">Search by Title</option>
-      </select>
-      <input
-        type="text"
-        placeholder={`Enter book ${availableBookSearch.type}`}
-        value={availableBookSearch.query}
-        onChange={(e) =>
-          setAvailableBookSearch({
-            ...availableBookSearch,
-            query: e.target.value,
-          })
-        }
-        className="border p-2 rounded-md flex-grow w-full md:w-auto hover:border-blue-500 focus:border-blue-500 bg-gray-800 text-white"
-      />
-      <button
-        onClick={() => setAvailableBookSearch({ type: "id", query: "" })}
-        className="bg-gray-700 p-2 rounded-md w-full md:w-auto hover:bg-gray-600 text-white"
-      >
-        Clear
-      </button>
+    <div className="p-4 border-b border-gray-700">
+      <div className="flex flex-col md:flex-row gap-3">
+        <select
+          value={availableBookSearch.type}
+          onChange={(e) =>
+            setAvailableBookSearch({
+              ...availableBookSearch,
+              type: e.target.value as "id" | "name",
+            })
+          }
+          className="bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+        >
+          <option value="id">Search by ID</option>
+          <option value="name">Search by Title</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder={`Enter ${
+            availableBookSearch.type === "id" ? "book ID" : "book title"
+          }`}
+          value={availableBookSearch.query}
+          onChange={(e) =>
+            setAvailableBookSearch({
+              ...availableBookSearch,
+              query: e.target.value,
+            })
+          }
+          className="bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 flex-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
+        />
+
+        <button
+          onClick={() => setAvailableBookSearch({ type: "id", query: "" })}
+          className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition-colors w-full md:w-auto"
+        >
+          Clear
+        </button>
+      </div>
     </div>
   );
 
   // Render Rental History Tab
   const renderRentalHistoryTab = () => (
-    <div>
+    <div className="bg-gray-900 p-6 rounded-lg">
       <h2 className="text-3xl font-bold mb-6 text-white">Rental History</h2>
       <button
         onClick={() => handleExport("rentals")}
-        className="bg-blue-500 text-white p-2 rounded-md flex items-center mb-4 hover:bg-blue-600"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mb-4 transition-colors"
         title="Export Rental History"
       >
-        <Download size={16} className="mr-1" /> Export Rental History
+        <Download size={18} className="mr-1" /> Export Rental History
       </button>
-      <div className="flex flex-col md:flex-row items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
+
+      <div className="flex flex-col md:flex-row items-center mb-6 space-y-2 md:space-y-0 md:space-x-4">
         <select
           value={rentalHistorySearch.type}
           onChange={(e) =>
@@ -1277,14 +1820,17 @@ const LibraryManagementSystem: React.FC = () => {
               type: e.target.value as "id" | "name",
             })
           }
-          className="border p-2 rounded-md w-full md:w-auto hover:border-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         >
           <option value="id">Search by ID</option>
           <option value="name">Search by Name</option>
         </select>
+
         <input
           type="text"
-          placeholder={`Enter rental ${rentalHistorySearch.type}`}
+          placeholder={`Enter ${
+            rentalHistorySearch.type === "id" ? "rental ID" : "user name"
+          }`}
           value={rentalHistorySearch.query}
           onChange={(e) =>
             setRentalHistorySearch({
@@ -1292,65 +1838,112 @@ const LibraryManagementSystem: React.FC = () => {
               query: e.target.value,
             })
           }
-          className="border p-2 rounded-md flex-grow w-full md:w-auto hover:border-blue-500 focus:border-blue-500 bg-gray-800 text-white"
+          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
+
         <button
           onClick={() => setRentalHistorySearch({ type: "id", query: "" })}
-          className="bg-gray-700 p-2 rounded-md w-full md:w-auto hover:bg-gray-600 text-white"
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
         >
           Clear
         </button>
       </div>
-      <table className="w-full bg-gray-800 border rounded-xl shadow-md">
-        <thead>
-          <tr className="bg-gray-700">
-            <th className="p-3 border text-white">Book</th>
-            <th className="p-3 border text-white">User</th>
-            <th className="p-3 border text-white">Rental Date</th>
-            <th className="p-3 border text-white">Due Date</th>
-            <th className="p-3 border text-white">Custom Return Date</th>
-            <th className="p-3 border text-white">Status</th>
-            <th className="p-3 border text-white">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {searchRentalHistory(rentals).map((rental) => (
-            <tr key={rental.id} className="bg-gray-600">
-              <td className="p-3 border text-white">
-                {books.find((book) => book.id === rental.bookId)?.title}
-              </td>
-              <td className="p-3 border text-white">
-                {users.find((user) => user.id === rental.userId)?.name}
-              </td>
-              <td className="p-3 border text-white">
-                {new Date(rental.rentalDate).toLocaleDateString()}
-              </td>
-              <td className="p-3 border text-white">
-                {new Date(rental.dueDate).toLocaleDateString()}
-              </td>
-              <td className="p-3 border text-white">
-                {rental.customReturnDate
-                  ? new Date(rental.customReturnDate).toLocaleDateString()
-                  : "N/A"}
-              </td>
-              <td className="p-3 border text-white">
-                {rental.returnDate ? "Returned" : "Not Returned"}
-              </td>
-              <td className="p-3 border text-white">
-                <button
-                  className="text-red-500 hover:text-red-600"
-                  onClick={() => {
-                    setSelectedRental(rental);
-                    setIsDeleteRentalModalOpen(true);
-                  }}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+      <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+        {groupRentalsByUser(searchRentalHistory(rentals)).map((group) => (
+          <div key={group.userId} className="mb-6">
+            <h3 className="text-2xl font-semibold mb-4 text-white">
+              {users.find((user) => user.id === group.userId)?.name ||
+                "Unknown User"}
+            </h3>
+            <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-700">
+                    <th className="p-4 text-left text-white font-medium">
+                      Book
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Rental Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Due Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Custom Return Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Status
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.rentals.map((rental) => (
+                    <tr
+                      key={rental.id}
+                      className="border-t border-gray-700 hover:bg-gray-750"
+                    >
+                      <td className="p-4 text-white">
+                        {books.find((book) => book.id === rental.bookId)
+                          ?.title || "Unknown Book"}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {new Date(rental.rentalDate).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {new Date(rental.dueDate).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {rental.customReturnDate
+                          ? new Date(
+                              rental.customReturnDate
+                            ).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        <span
+                          className={`${
+                            rental.returnDate
+                              ? "text-green-400"
+                              : "text-yellow-400"
+                          }`}
+                        >
+                          {rental.returnDate ? "Returned" : "Not Returned"}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <button
+                          className="text-red-400 hover:text-red-300 transition-colors"
+                          onClick={() => {
+                            setSelectedRental(rental);
+                            setIsDeleteRentalModalOpen(true);
+                          }}
+                        >
+                          Delete
+                        </button>
+                        {!rental.returnDate && (
+                          <button
+                            className="text-blue-400 hover:text-blue-300 transition-colors ml-2"
+                            onClick={() => {
+                              setSelectedRental(rental);
+                              setIsReturnBookModalOpen(true);
+                            }}
+                          >
+                            Return
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -1398,47 +1991,186 @@ const LibraryManagementSystem: React.FC = () => {
           Clear
         </button>
       </div>
-      <table className="w-full bg-gray-800 border rounded-xl shadow-md">
-        <thead>
-          <tr className="bg-gray-700">
-            <th className="p-3 border text-white">Book</th>
-            <th className="p-3 border text-white">User</th>
-            <th className="p-3 border text-white">Rental Date</th>
-            <th className="p-3 border text-white">Due Date</th>
-            <th className="p-3 border text-white">Custom Return Date</th>
-            <th className="p-3 border text-white">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {searchUnreturnedBooks(rentals)
-            .filter(
-              (rental) =>
-                !rental.returnDate && new Date(rental.dueDate) < new Date()
-            )
-            .map((rental) => (
-              <tr key={rental.id} className="bg-gray-600">
-                <td className="p-3 border text-white">
-                  {books.find((book) => book.id === rental.bookId)?.title}
-                </td>
-                <td className="p-3 border text-white">
-                  {users.find((user) => user.id === rental.userId)?.name}
-                </td>
-                <td className="p-3 border text-white">
-                  {new Date(rental.rentalDate).toLocaleDateString()}
-                </td>
-                <td className="p-3 border text-white">
-                  {new Date(rental.dueDate).toLocaleDateString()}
-                </td>
-                <td className="p-3 border text-white">
-                  {rental.customReturnDate
-                    ? new Date(rental.customReturnDate).toLocaleDateString()
-                    : "N/A"}
-                </td>
-                <td className="p-3 border text-white">Not Returned</td>
-              </tr>
-            ))}
-        </tbody>
-      </table>
+      <div className="max-h-96 overflow-y-auto">
+        {groupRentalsByUser(
+          searchUnreturnedBooks(rentals).filter(
+            (rental) =>
+              !rental.returnDate && new Date(rental.dueDate) < new Date()
+          )
+        ).map((group) => (
+          <div key={group.userId} className="mb-4">
+            <h3 className="text-2xl font-semibold mb-2 text-white">
+              {users.find((user) => user.id === group.userId)?.name}
+            </h3>
+            <table className="w-full bg-gray-800 border rounded-xl shadow-md">
+              <thead>
+                <tr className="bg-gray-700">
+                  <th className="p-3 border text-white">Book</th>
+                  <th className="p-3 border text-white">Rental Date</th>
+                  <th className="p-3 border text-white">Due Date</th>
+                  <th className="p-3 border text-white">Custom Return Date</th>
+                  <th className="p-3 border text-white">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.rentals.map((rental) => (
+                  <tr key={rental.id} className="bg-gray-600">
+                    <td className="p-3 border text-white">
+                      {books.find((book) => book.id === rental.bookId)?.title}
+                    </td>
+                    <td className="p-3 border text-white">
+                      {new Date(rental.rentalDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 border text-white">
+                      {new Date(rental.dueDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 border text-white">
+                      {rental.customReturnDate
+                        ? new Date(rental.customReturnDate).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                    <td className="p-3 border text-white">Not Returned</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Render Returned Books Tab
+  const renderReturnedBooksTab = () => (
+    <div className="bg-gray-900 p-6 rounded-lg">
+      <h2 className="text-3xl font-bold mb-6 text-white">Returned Books</h2>
+      <button
+        onClick={() => handleExport("rentals")}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mb-4 transition-colors"
+        title="Export Returned Books"
+      >
+        <Download size={18} className="mr-1" /> Export Returned Books
+      </button>
+
+      <div className="flex flex-col md:flex-row items-center mb-6 space-y-2 md:space-y-0 md:space-x-4">
+        <select
+          value={returnedBooksSearch.type}
+          onChange={(e) =>
+            setReturnedBooksSearch({
+              ...returnedBooksSearch,
+              type: e.target.value as "id" | "name",
+            })
+          }
+          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        >
+          <option value="id">Search by ID</option>
+          <option value="name">Search by Name</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder={`Enter ${
+            returnedBooksSearch.type === "id" ? "rental ID" : "user name"
+          }`}
+          value={returnedBooksSearch.query}
+          onChange={(e) =>
+            setReturnedBooksSearch({
+              ...returnedBooksSearch,
+              query: e.target.value,
+            })
+          }
+          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        />
+
+        <button
+          onClick={() => setReturnedBooksSearch({ type: "id", query: "" })}
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
+        >
+          Clear
+        </button>
+      </div>
+
+      <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+        {groupRentalsByUser(searchReturnedBooks(rentals)).map((group) => (
+          <div key={group.userId} className="mb-6">
+            <h3 className="text-2xl font-semibold mb-4 text-white">
+              {users.find((user) => user.id === group.userId)?.name ||
+                "Unknown User"}
+            </h3>
+            <div className="bg-gray-800 rounded-lg overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-700">
+                    <th className="p-4 text-left text-white font-medium">
+                      Book
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Rental Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Due Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Custom Return Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Return Date
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Status
+                    </th>
+                    <th className="p-4 text-left text-white font-medium">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {group.rentals.map((rental) => (
+                    <tr
+                      key={rental.id}
+                      className="border-t border-gray-700 hover:bg-gray-750"
+                    >
+                      <td className="p-4 text-white">
+                        {books.find((book) => book.id === rental.bookId)
+                          ?.title || "Unknown Book"}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {new Date(rental.rentalDate).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {new Date(rental.dueDate).toLocaleDateString()}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {rental.customReturnDate
+                          ? new Date(
+                              rental.customReturnDate
+                            ).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        {rental.returnDate
+                          ? new Date(rental.returnDate).toLocaleDateString()
+                          : "N/A"}
+                      </td>
+                      <td className="p-4 text-gray-300">
+                        <span className="text-green-400">Returned</span>
+                      </td>
+                      <td className="p-4">
+                        <button
+                          className="text-blue-400 hover:text-blue-300 transition-colors"
+                          onClick={() => undoReturnBook(rental.id)}
+                        >
+                          Undo Return
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -1473,6 +2205,19 @@ const LibraryManagementSystem: React.FC = () => {
       </div>
     </div>
   );
+
+  // Group rentals by user
+  const groupRentalsByUser = (rentals: Rental[]) => {
+    const groupedRentals: { userId: number; rentals: Rental[] }[] = [];
+    const userIds = new Set(rentals.map((rental) => rental.userId));
+
+    userIds.forEach((userId) => {
+      const userRentals = rentals.filter((rental) => rental.userId === userId);
+      groupedRentals.push({ userId, rentals: userRentals });
+    });
+
+    return groupedRentals;
+  };
 
   return (
     <div className="container mx-auto p-6 bg-gray-900 text-white">
@@ -1533,6 +2278,17 @@ const LibraryManagementSystem: React.FC = () => {
           <span>Unreturned Books</span>
         </button>
         <button
+          onClick={() => setActiveTab("returned")}
+          className={`flex items-center space-x-2 p-3 rounded-xl ${
+            activeTab === "returned"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-700 text-gray-300"
+          }`}
+        >
+          <ShoppingCart />
+          <span>Returned Books</span>
+        </button>
+        <button
           onClick={() => setActiveTab("backup")}
           className={`flex items-center space-x-2 p-3 rounded-xl ${
             activeTab === "backup"
@@ -1542,6 +2298,17 @@ const LibraryManagementSystem: React.FC = () => {
         >
           <Clock />
           <span>Backup</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("admin")}
+          className={`flex items-center space-x-2 p-3 rounded-xl ${
+            activeTab === "admin"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-700 text-gray-300"
+          }`}
+        >
+          <Lock />
+          <span>Admin</span>
         </button>
       </div>
 
@@ -1637,7 +2404,7 @@ const LibraryManagementSystem: React.FC = () => {
                 });
                 setIsUserModalOpen(true);
               }}
-              className="bg-green-500 text-white px-4 py-4 flex flex-row justify-center items-center  rounded-xl hover:bg-green-600"
+              className="bg-green-500 text-white px-4 py-4 flex flex-row justify-center items-center rounded-xl hover:bg-green-600"
             >
               <Plus className="mr-2" /> Add User
             </button>
@@ -1696,7 +2463,11 @@ const LibraryManagementSystem: React.FC = () => {
 
       {activeTab === "unreturned" && renderUnreturnedBooksTab()}
 
+      {activeTab === "returned" && renderReturnedBooksTab()}
+
       {activeTab === "backup" && renderBackupTab()}
+
+      {activeTab === "admin" && renderAdminPanel()}
 
       {renderBookModal()}
       {renderUserModal()}
@@ -1705,11 +2476,13 @@ const LibraryManagementSystem: React.FC = () => {
       {renderDeleteRentalModal()}
       {renderViewRentalsModal()}
       {renderDeleteBookModal()}
+      {renderReturnBookModal()}
+      {renderDeleteUserModal()}
 
       {/* Export All Button */}
       <button
         onClick={() => handleExport("all")}
-        className="fixed bottom-4 right-4 bg-blue-500 text-white  px-4 py-4 flex flex-row justify-center items-center  rounded-xl hover:bg-blue-600"
+        className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-4 flex flex-row justify-center items-center rounded-xl hover:bg-blue-600"
         title="Export All"
       >
         <Download size={16} className="mr-1" /> Export All
