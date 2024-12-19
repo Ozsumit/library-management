@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+/* Global Table Styles */
+table {
+  width: 100%; /* Equivalent to w-full */
+  background-color: #1e293b; /* Equivalent to bg-slate-800 */
+  border: 1px solid #e5e7eb; /* Adding a subtle border */
+  border-radius: 0.75rem; /* Equivalent to rounded-xl */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Equivalent to shadow-md */
+  overflow: hidden; /* Ensures rounded corners work properly */
+}
+
+table th,
+table td {
+  padding: 0.75rem; /* Add padding for better readability */
+  text-align: left; /* Align text to the left */
+  border-bottom: 1px solid #e5e7eb; /* Add row dividers */
+}
+
+table th {
+  background-color: #334155; /* Slightly darker shade for headers */
+  color: #f8fafc; /* Light text color */
+  font-weight: 600; /* Bold font for headers */
+}
+
+table tr:last-child td {
+  border-bottom: none; /* Remove bottom border for the last row */
+}
+
+table tr:hover {
+  background-color: #111111; /* Slightly darker shade for headers */
+  color: #fff1f1; /* Light text color */
+  /* font-weight: 600; Bold font for headers */
+}
