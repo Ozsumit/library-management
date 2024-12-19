@@ -61,26 +61,10 @@ const LibraryManagementSystem: React.FC = () => {
   >("books");
 
   // Initialize state with localStorage
-  const [books, setBooks] = useState<Book[]>(() => {
-    const localStorageBooks = localStorage.getItem("library-books");
-    return localStorageBooks ? JSON.parse(localStorageBooks) : [];
-  });
-
-  const [users, setUsers] = useState<User[]>(() => {
-    const localStorageUsers = localStorage.getItem("library-users");
-    return localStorageUsers ? JSON.parse(localStorageUsers) : [];
-  });
-
-  const [rentals, setRentals] = useState<Rental[]>(() => {
-    const localStorageRentals = localStorage.getItem("library-rentals");
-    return localStorageRentals ? JSON.parse(localStorageRentals) : [];
-  });
-
-  const [lastBackupTime, setLastBackupTime] = useState<number | null>(() => {
-    const storedTime = localStorage.getItem("lastBackupTime");
-    return storedTime ? parseInt(storedTime, 10) : null;
-  });
-
+  const [books, setBooks] = useState<Book[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [rentals, setRentals] = useState<Rental[]>([]);
+  const [lastBackupTime, setLastBackupTime] = useState<number | null>(null);
   const [backupInterval, setBackupInterval] = useState<NodeJS.Timeout | null>(
     null
   );
@@ -138,31 +122,54 @@ const LibraryManagementSystem: React.FC = () => {
   const [rentVerificationUserId, setRentVerificationUserId] = useState("");
   const [customReturnDate, setCustomReturnDate] = useState(""); // State for custom return date
 
+  // Load data from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const localStorageBooks = localStorage.getItem("library-books");
+      const localStorageUsers = localStorage.getItem("library-users");
+      const localStorageRentals = localStorage.getItem("library-rentals");
+      const storedTime = localStorage.getItem("lastBackupTime");
+
+      setBooks(localStorageBooks ? JSON.parse(localStorageBooks) : []);
+      setUsers(localStorageUsers ? JSON.parse(localStorageUsers) : []);
+      setRentals(localStorageRentals ? JSON.parse(localStorageRentals) : []);
+      setLastBackupTime(storedTime ? parseInt(storedTime, 10) : null);
+    }
+  }, []);
+
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem("library-books", JSON.stringify(books));
-    saveToDB("books", books);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("library-books", JSON.stringify(books));
+      saveToDB("books", books);
+    }
   }, [books]);
 
   useEffect(() => {
-    localStorage.setItem("library-users", JSON.stringify(users));
-    saveToDB("users", users);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("library-users", JSON.stringify(users));
+      saveToDB("users", users);
+    }
   }, [users]);
 
   useEffect(() => {
-    localStorage.setItem("library-rentals", JSON.stringify(rentals));
-    saveToDB("rentals", rentals);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem("library-rentals", JSON.stringify(rentals));
+      saveToDB("rentals", rentals);
+    }
   }, [rentals]);
 
   useEffect(() => {
-    const currentTime = new Date().getTime();
-    const oneDayInMillis = 24 * 60 * 60 * 1000;
+    if (typeof window !== 'undefined') {
+      const currentTime = new Date().getTime();
+      const oneDayInMillis = 24 * 60 * 60 * 1000;
 
-    if (lastBackupTime && currentTime - lastBackupTime < oneDayInMillis) {
-      return;
+      if (lastBackupTime && currentTime - lastBackupTime < oneDayInMillis) {
+        return;
+      }
+
+      createBackup();
     }
-
-    createBackup();
   }, [lastBackupTime]);
 
   // Export functionality
@@ -965,14 +972,15 @@ const LibraryManagementSystem: React.FC = () => {
             onChange={(e) => setRentVerificationUserId(e.target.value)}
             required
           />
-          <input
-            type="date"
-            placeholder="Custom Return Date"
-            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
-            value={customReturnDate}
-            onChange={(e) => setCustomReturnDate(e.target.value)}
-            required
-          />
+        <input
+  type="date"
+  placeholder="Custom Return Date"
+  className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white placeholder-gray-400 transition-all duration-200"
+  value={customReturnDate}
+  onChange={(e) => setCustomReturnDate(e.target.value)}
+  required
+/>
+
           <div className="flex justify-between">
             <button
               type="button"
