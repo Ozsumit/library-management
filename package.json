@@ -10,8 +10,11 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.0",
+    "crypto-js": "^4.2.0",
     "file-saver": "^2.0.5",
     "fs": "^0.0.1-security",
+    "fuse.js": "^7.0.0",
+    "idb": "^8.0.1",
     "lucide-react": "^0.468.0",
     "next": "15.1.1",
     "path": "^0.12.7",
@@ -20,6 +23,8 @@
     "uuid": "^11.0.3"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
