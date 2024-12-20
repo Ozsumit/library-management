@@ -666,26 +666,28 @@ const LibraryManagementSystem: React.FC = () => {
     store.clear();
     data.forEach((item) => store.add(item));
     await tx.oncomplete;
-  }; // Initialize backup system - run this once when your app starts
+  };
+
+  // Initialize backup system - run this once when your app starts
   const initializeBackupSystem = () => {
     if (!localStorage.getItem("backupInitialized")) {
       localStorage.setItem("backupInitialized", "true");
       localStorage.setItem("lastBackupTime", new Date().getTime().toString());
     }
   };
-  
+
   // Check if backup is needed
   const isBackupNeeded = () => {
     const lastBackupTime = localStorage.getItem("lastBackupTime");
     if (!lastBackupTime) return true; // Backup immediately if no record exists
-  
+
     const currentTime = new Date().getTime();
     const timeDifference = currentTime - parseInt(lastBackupTime, 10);
     const sixHoursInMs = 6 * 60 * 60 * 1000;
-  
+
     return timeDifference >= sixHoursInMs;
   };
-  
+
   // Create Backup Function
   const createBackup = () => {
     try {
@@ -695,47 +697,46 @@ const LibraryManagementSystem: React.FC = () => {
         hour: "2-digit",
         minute: "2-digit",
       });
-      const filename = `backup233-${day}-${time}.json`;
-  
+      const filename = `backup-${day}-${time}.json`;
+
       const data = { books, users, rentals };
       const jsonString = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
-  
+
       const timestamp = currentDate.getTime();
       localStorage.setItem("lastBackupTime", timestamp.toString());
-  
+
       console.log("Backup created at:", new Date().toLocaleString());
     } catch (error) {
       console.error("Backup creation failed:", error);
     }
   };
-  
+
   // Component setup
   useEffect(() => {
     // Initialize the backup system
     initializeBackupSystem();
-  
+
     // Check if a backup is needed immediately upon load
     if (isBackupNeeded()) {
       createBackup();
     }
-  
+
     // Set up interval for future checks
     const interval = setInterval(() => {
       if (isBackupNeeded()) {
         createBackup();
       }
     }, 60 * 60 * 1000); // Check every hour
-  
+
     return () => clearInterval(interval); // Cleanup interval on unmount
   }, []); // Empty dependency array ensures this runs once
-  
+
   // Optional: Function to force a backup regardless of time
   const forceBackup = () => {
     createBackup();
   };
-  
 
   // Remove returned books from rental history after 2 days
   useEffect(() => {
