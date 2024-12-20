@@ -554,8 +554,6 @@ const LibraryManagementSystem: React.FC = () => {
       selectedRental &&
       selectedRental.userId === parseInt(verificationUserId) &&
       verificationUserId.trim() !== ""
-      selectedRental.userId === parseInt(verificationUserId) &&
-      verificationUserId.trim() !== ""
     ) {
       deleteRental(selectedRental.id);
       setIsDeleteRentalModalOpen(false);
@@ -570,8 +568,6 @@ const LibraryManagementSystem: React.FC = () => {
     if (
       selectedBook &&
       selectedUser &&
-      selectedUser.id === parseInt(rentVerificationUserId) &&
-      rentVerificationUserId.trim() !== ""
       selectedUser.id === parseInt(rentVerificationUserId) &&
       rentVerificationUserId.trim() !== ""
     ) {
@@ -738,9 +734,6 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Initialize backup system - run this once when your app starts
-  };
-
-  // Initialize backup system - run this once when your app starts
   const initializeBackupSystem = () => {
     if (!localStorage.getItem("backupInitialized")) {
       localStorage.setItem("backupInitialized", "true");
@@ -748,17 +741,14 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-
   // Check if backup is needed
   const isBackupNeeded = () => {
     const lastBackupTime = localStorage.getItem("lastBackupTime");
     if (!lastBackupTime) return true; // Backup immediately if no record exists
 
-
     const currentTime = new Date().getTime();
     const timeDifference = currentTime - parseInt(lastBackupTime, 10);
     const sixHoursInMs = 6 * 60 * 60 * 1000;
-
 
     return timeDifference >= sixHoursInMs;
   };
@@ -774,17 +764,13 @@ const LibraryManagementSystem: React.FC = () => {
       });
       const filename = `backup-${day}-${time}.json`;
 
-      const filename = `backup-${day}-${time}.json`;
-
       const data = { books, users, rentals };
       const jsonString = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
 
-
       const timestamp = currentDate.getTime();
       localStorage.setItem("lastBackupTime", timestamp.toString());
-
 
       console.log("Backup created at:", new Date().toLocaleString());
     } catch (error) {
@@ -796,7 +782,7 @@ const LibraryManagementSystem: React.FC = () => {
   const incrementButtonClickCount = () => {
     setButtonClickCount((prevCount) => prevCount + 1);
     if (buttonClickCount >= 29) {
-          handleExport("all");
+      handleExport("all");
 
       setButtonClickCount(0);
     }
@@ -807,12 +793,10 @@ const LibraryManagementSystem: React.FC = () => {
     // Initialize the backup system
     initializeBackupSystem();
 
-
     // Check if a backup is needed immediately upon load
     if (isBackupNeeded()) {
       handleExport("all");
     }
-
 
     // Set up interval for future checks
     const interval = setInterval(() => {
@@ -820,7 +804,6 @@ const LibraryManagementSystem: React.FC = () => {
         handleExport("all");
       }
     }, 60 * 60 * 1000); // Check every hour
-
 
     return () => clearInterval(interval); // Cleanup interval on unmount
   }, []); // Empty dependency array ensures this runs once
@@ -1305,7 +1288,6 @@ const LibraryManagementSystem: React.FC = () => {
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               onClick={confirmDeleteUser}
               disabled={!verificationUserId.trim()}
-              disabled={!verificationUserId.trim()}
             >
               Delete
             </button>
@@ -1446,7 +1428,6 @@ const LibraryManagementSystem: React.FC = () => {
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
               onClick={verifyAndRentBook}
               disabled={!rentVerificationUserId.trim()}
-              disabled={!rentVerificationUserId.trim()}
             >
               Rent
             </button>
@@ -1492,7 +1473,6 @@ const LibraryManagementSystem: React.FC = () => {
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               onClick={verifyAndDeleteRental}
               disabled={!verificationUserId.trim()}
-              disabled={!verificationUserId.trim()}
             >
               Delete
             </button>
@@ -1536,7 +1516,6 @@ const LibraryManagementSystem: React.FC = () => {
               type="button"
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
               onClick={() => confirmReturnBook(selectedRental.id)}
-              disabled={!verificationUserId.trim()}
               disabled={!verificationUserId.trim()}
             >
               Confirm Return
@@ -1641,7 +1620,6 @@ const LibraryManagementSystem: React.FC = () => {
               type="button"
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               onClick={confirmDeleteBook}
-              disabled={!verificationUserId.trim()}
               disabled={!verificationUserId.trim()}
             >
               Delete
