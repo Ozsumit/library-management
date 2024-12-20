@@ -554,8 +554,6 @@ const LibraryManagementSystem: React.FC = () => {
       selectedRental &&
       selectedRental.userId === parseInt(verificationUserId) &&
       verificationUserId.trim() !== ""
-      selectedRental.userId === parseInt(verificationUserId) &&
-      verificationUserId.trim() !== ""
     ) {
       deleteRental(selectedRental.id);
       setIsDeleteRentalModalOpen(false);
@@ -572,8 +570,6 @@ const LibraryManagementSystem: React.FC = () => {
       selectedUser &&
       selectedUser.id === parseInt(rentVerificationUserId) &&
       rentVerificationUserId.trim() !== ""
-      selectedUser.id === parseInt(rentVerificationUserId) &&
-      rentVerificationUserId.trim() !== ""
     ) {
       addRental(selectedBook.id, selectedUser.id, customReturnDate);
       setIsRentVerificationModalOpen(false);
@@ -586,7 +582,7 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Return Book Funcion
+  // Return Book Function
   const returnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
@@ -626,7 +622,7 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Add notifiation
+      // Add notification
       setNotifications((prevNotifications) => [
         ...prevNotifications,
         `Book "${
@@ -638,7 +634,7 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Undo Return Book Funcion
+  // Undo Return Book Function
   const undoReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
@@ -674,7 +670,7 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Confirm Return Book Funcion
+  // Confirm Return Book Function
   const confirmReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
@@ -738,9 +734,6 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Initialize backup system - run this once when your app starts
-  };
-
-  // Initialize backup system - run this once when your app starts
   const initializeBackupSystem = () => {
     if (!localStorage.getItem("backupInitialized")) {
       localStorage.setItem("backupInitialized", "true");
@@ -748,24 +741,19 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-
   // Check if backup is needed
   const isBackupNeeded = () => {
     const lastBackupTime = localStorage.getItem("lastBackupTime");
     if (!lastBackupTime) return true; // Backup immediately if no record exists
 
-
     const currentTime = new Date().getTime();
     const timeDifference = currentTime - parseInt(lastBackupTime, 10);
     const sixHoursInMs = 6 * 60 * 60 * 1000;
-
 
     return timeDifference >= sixHoursInMs;
   };
 
   // Create Backup Function
-
-  // Create Backup Funcion
   const createBackup = () => {
     try {
       const currentDate = new Date();
@@ -776,17 +764,13 @@ const LibraryManagementSystem: React.FC = () => {
       });
       const filename = `backup-${day}-${time}.json`;
 
-      const filename = `backup-${day}-${time}.json`;
-
       const data = { books, users, rentals };
       const jsonString = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
 
-
       const timestamp = currentDate.getTime();
       localStorage.setItem("lastBackupTime", timestamp.toString());
-
 
       console.log("Backup created at:", new Date().toLocaleString());
     } catch (error) {
@@ -804,18 +788,15 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-
   // Component setup
   useEffect(() => {
     // Initialize the backup system
     initializeBackupSystem();
 
-
     // Check if a backup is needed immediately upon load
     if (isBackupNeeded()) {
       handleExport("all");
     }
-
 
     // Set up interval for future checks
     const interval = setInterval(() => {
@@ -824,13 +805,10 @@ const LibraryManagementSystem: React.FC = () => {
       }
     }, 60 * 60 * 1000); // Check every hour
 
-
     return () => clearInterval(interval); // Cleanup interval on unmount
   }, []); // Empty dependency array ensures this runs once
 
   // Optional: Function to force a backup regardless of time
-
-  // Optional: Funcion to force a backup regardless of time
   const forceBackup = () => {
     createBackup();
   };
@@ -1310,7 +1288,6 @@ const LibraryManagementSystem: React.FC = () => {
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               onClick={confirmDeleteUser}
               disabled={!verificationUserId.trim()}
-              disabled={!verificationUserId.trim()}
             >
               Delete
             </button>
@@ -1451,7 +1428,6 @@ const LibraryManagementSystem: React.FC = () => {
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
               onClick={verifyAndRentBook}
               disabled={!rentVerificationUserId.trim()}
-              disabled={!rentVerificationUserId.trim()}
             >
               Rent
             </button>
@@ -1497,7 +1473,6 @@ const LibraryManagementSystem: React.FC = () => {
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               onClick={verifyAndDeleteRental}
               disabled={!verificationUserId.trim()}
-              disabled={!verificationUserId.trim()}
             >
               Delete
             </button>
@@ -1541,7 +1516,6 @@ const LibraryManagementSystem: React.FC = () => {
               type="button"
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
               onClick={() => confirmReturnBook(selectedRental.id)}
-              disabled={!verificationUserId.trim()}
               disabled={!verificationUserId.trim()}
             >
               Confirm Return
@@ -1646,7 +1620,6 @@ const LibraryManagementSystem: React.FC = () => {
               type="button"
               className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               onClick={confirmDeleteBook}
-              disabled={!verificationUserId.trim()}
               disabled={!verificationUserId.trim()}
             >
               Delete
@@ -2046,242 +2019,6 @@ const LibraryManagementSystem: React.FC = () => {
           </div>
         )}
       </div>
-    <div className="bg-gray-900 p-6 rounded-lg">
-      <h2 className="text-3xl font-bold mb-6 text-white">Admin Panel</h2>
-      {!isAdminPanelOpen ? (
-        <div>
-          <input
-            type="password"
-            placeholder="Enter Admin Password"
-            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
-            value={adminPassword}
-            onChange={(e) => setAdminPassword(e.target.value)}
-            required
-          />
-          <button
-            type="button"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-            onClick={() => {
-              if (adminPassword === "admin123") {
-                setIsAdminAuthenticated(true);
-              } else {
-                alert("Incorrect password. Please try again.");
-              }
-            }}
-          >
-            Login
-          </button>
-        </div>
-      ) : (
-        <div>
-          <button
-            type="button"
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4"
-            onClick={() => setIsAdminAuthenticated(false)}
-          >
-            Logout
-          </button>
-          <h3 className="text-2xl font-semibold mb-4 text-white">
-            Manage Users
-          </h3>
-          <div className="mb-4">
-            <button
-              onClick={() => {
-                setCurrentUser({
-                  id: 0,
-                  name: "",
-                  email: "",
-                  membershipDate: new Date().toISOString(),
-                  currentRentals: [],
-                  class: "",
-                });
-                setIsUserModalOpen(true);
-              }}
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
-            >
-              <Plus className="mr-2" /> Add User
-            </button>
-            <table className="w-full border rounded-xl shadow-md bg-gray-800">
-              <thead>
-                <tr className="bg-gray-700">
-                  <th className="p-3 border text-white">ID</th>
-                  <th className="p-3 border text-white">Name</th>
-                  <th className="p-3 border text-white">Email</th>
-                  <th className="p-3 border text-white">Class</th>
-                  <th className="p-3 border text-white">Membership Date</th>
-                  <th className="p-3 border text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {searchUsers(users).map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-600">
-                    <td className="p-3 border text-white">{user.id}</td>
-                    <td className="p-3 border text-white">{user.name}</td>
-                    <td className="p-3 border text-white">{user.email}</td>
-                    <td className="p-3 border text-white">{user.class}</td>
-                    <td className="p-3 border text-white">
-                      {new Date(user.membershipDate).toLocaleDateString()}
-                    </td>
-                    <td className="p-3 border text-center">
-                      <button
-                        onClick={() => {
-                          setCurrentUser(user);
-                          setIsUserModalOpen(true);
-                        }}
-                        className="text-blue-500 mr-2 hover:text-blue-600"
-                      >
-                        <Edit className="mr-1" /> Edit
-                      </button>
-                      <button
-                        onClick={() => deleteUser(user.id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash className="mr-1" /> Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <h3 className="text-2xl font-semibold mb-4 text-white">
-            Manage Books
-          </h3>
-          <div className="mb-4">
-            <button
-              onClick={() => {
-                setCurrentBook({
-                  id: 0,
-                  title: "",
-                  author: "",
-                  isbn: "",
-                  genre: "",
-                  totalCopies: 0,
-                  availableCopies: 0,
-                });
-                setIsBookModalOpen(true);
-              }}
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
-            >
-              <Plus className="mr-2" /> Add Book
-            </button>
-            <table className="w-full border rounded-xl shadow-md bg-gray-800">
-              <thead>
-                <tr className="bg-gray-700">
-                  <th className="p-3 border text-white">ID</th>
-                  <th className="p-3 border text-white">Title</th>
-                  <th className="p-3 border text-white">Author</th>
-                  <th className="p-3 border text-white">ISBN</th>
-                  <th className="p-3 border text-white">Genre</th>
-                  <th className="p-3 border text-white">Total Copies</th>
-                  <th className="p-3 border text-white">Available</th>
-                  <th className="p-3 border text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {searchBooks(books).map((book) => (
-                  <tr key={book.id} className="hover:bg-gray-600">
-                    <td className="p-3 border text-white">{book.id}</td>
-                    <td className="p-3 border text-white">{book.title}</td>
-                    <td className="p-3 border text-white">{book.author}</td>
-                    <td className="p-3 border text-white">{book.isbn}</td>
-                    <td className="p-3 border text-white">{book.genre}</td>
-                    <td className="p-3 border text-center text-white">
-                      {book.totalCopies}
-                    </td>
-                    <td className="p-3 border text-center text-white">
-                      {book.availableCopies}
-                    </td>
-                    <td className="p-3 border text-center">
-                      <button
-                        onClick={() => {
-                          setCurrentBook(book);
-                          setIsBookModalOpen(true);
-                        }}
-                        className="text-blue-500 mr-2 hover:text-blue-600"
-                      >
-                        <Edit className="mr-1" /> Edit
-                      </button>
-                      <button
-                        onClick={() => deleteBook(book.id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash className="mr-1" /> Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <h3 className="text-2xl font-semibold mb-4 text-white">
-            Manage Rentals
-          </h3>
-          <div className="mb-4">
-            <table className="w-full border rounded-xl shadow-md bg-gray-800">
-              <thead>
-                <tr className="bg-gray-700">
-                  <th className="p-3 border text-white">ID</th>
-                  <th className="p-3 border text-white">Book ID</th>
-                  <th className="p-3 border text-white">User ID</th>
-                  <th className="p-3 border text-white">Rental Date</th>
-                  <th className="p-3 border text-white">Due Date</th>
-                  <th className="p-3 border text-white">Return Date</th>
-                  <th className="p-3 border text-white">Custom Return Date</th>
-                  <th className="p-3 border text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rentals.map((rental) => (
-                  <tr key={rental.id} className="hover:bg-gray-600">
-                    <td className="p-3 border text-white">{rental.id}</td>
-                    <td className="p-3 border text-white">{rental.bookId}</td>
-                    <td className="p-3 border text-white">{rental.userId}</td>
-                    <td className="p-3 border text-white">
-                      {new Date(rental.rentalDate).toLocaleDateString()}
-                    </td>
-                    <td className="p-3 border text-white">
-                      {new Date(rental.dueDate).toLocaleDateString()}
-                    </td>
-                    <td className="p-3 border text-white">
-                      {rental.returnDate
-                        ? new Date(rental.returnDate).toLocaleDateString()
-                        : "N/A"}
-                    </td>
-                    <td className="p-3 border text-white">
-                      {rental.customReturnDate
-                        ? new Date(rental.customReturnDate).toLocaleDateString()
-                        : "N/A"}
-                    </td>
-                    <td className="p-3 border text-center">
-                      <button
-                        onClick={() => {
-                          setSelectedRental(rental);
-                          setIsDeleteRentalModalOpen(true);
-                        }}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash className="mr-1" /> Delete
-                      </button>
-                      {!rental.returnDate && (
-                        <button
-                          onClick={() => {
-                            setSelectedRental(rental);
-                            setIsReturnBookModalOpen(true);
-                          }}
-                          className="text-blue-500 hover:text-blue-600 ml-2"
-                        >
-                          Return
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
     </div>
   );
 
@@ -2503,8 +2240,6 @@ const LibraryManagementSystem: React.FC = () => {
           onClick={() =>
             setRentalHistorySearch({ type: "id", query: "", sortBy: "id" })
           }
-          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
-          onClick={() => setRentalHistorySearch({ type: "id", query: "" })}
           className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
         >
           Clear
@@ -2806,8 +2541,6 @@ const LibraryManagementSystem: React.FC = () => {
           onClick={() =>
             setReturnedBooksSearch({ type: "id", query: "", sortBy: "id" })
           }
-          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
-          onClick={() => setReturnedBooksSearch({ type: "id", query: "" })}
           className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
         >
           Clear
