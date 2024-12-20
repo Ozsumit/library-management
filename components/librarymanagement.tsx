@@ -15,6 +15,7 @@ import {
   XCircle,
   Lock,
   Unlock,
+  Bell,
 } from "lucide-react";
 import { openDB } from "idb";
 import { saveAs } from "file-saver";
@@ -141,6 +142,9 @@ const LibraryManagementSystem: React.FC = () => {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+
+  // Notifications State
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -560,6 +564,16 @@ const LibraryManagementSystem: React.FC = () => {
           r.id === rentalId ? { ...r, returnDate: new Date().toISOString() } : r
         )
       );
+
+      // Add notification
+      setNotifications((prevNotifications) => [
+        ...prevNotifications,
+        `Book "${
+          books.find((book) => book.id === rental.bookId)?.title
+        }" returned by user "${
+          users.find((user) => user.id === rental.userId)?.name
+        }".`,
+      ]);
     }
   };
 
@@ -652,39 +666,76 @@ const LibraryManagementSystem: React.FC = () => {
     store.clear();
     data.forEach((item) => store.add(item));
     await tx.oncomplete;
+  }; // Initialize backup system - run this once when your app starts
+  const initializeBackupSystem = () => {
+    if (!localStorage.getItem("backupInitialized")) {
+      localStorage.setItem("backupInitialized", "true");
+      localStorage.setItem("lastBackupTime", new Date().getTime().toString());
+    }
   };
-
+  
+  // Check if backup is needed
+  const isBackupNeeded = () => {
+    const lastBackupTime = localStorage.getItem("lastBackupTime");
+    if (!lastBackupTime) return true; // Backup immediately if no record exists
+  
+    const currentTime = new Date().getTime();
+    const timeDifference = currentTime - parseInt(lastBackupTime, 10);
+    const sixHoursInMs = 6 * 60 * 60 * 1000;
+  
+    return timeDifference >= sixHoursInMs;
+  };
+  
   // Create Backup Function
   const createBackup = () => {
-    const currentDate = new Date();
-    const day = currentDate.getDate();
-    const time = currentDate.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const filename = `backup-${day}-${time}.json`;
-
-    const data = { books, users, rentals };
-    const jsonString = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    saveAs(blob, filename);
-    setLastBackupTime(currentDate.getTime());
-    localStorage.setItem("lastBackupTime", currentDate.getTime().toString());
+    try {
+      const currentDate = new Date();
+      const day = String(currentDate.getDate()).padStart(2, "0");
+      const time = currentDate.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const filename = `backup233-${day}-${time}.json`;
+  
+      const data = { books, users, rentals };
+      const jsonString = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      saveAs(blob, filename);
+  
+      const timestamp = currentDate.getTime();
+      localStorage.setItem("lastBackupTime", timestamp.toString());
+  
+      console.log("Backup created at:", new Date().toLocaleString());
+    } catch (error) {
+      console.error("Backup creation failed:", error);
+    }
   };
-
-  // Set up the backup interval
+  
+  // Component setup
   useEffect(() => {
-    const interval = setInterval(() => {
+    // Initialize the backup system
+    initializeBackupSystem();
+  
+    // Check if a backup is needed immediately upon load
+    if (isBackupNeeded()) {
       createBackup();
-    }, 12 * 60 * 60 * 1000); // 12 hours in milliseconds
-    setBackupInterval(interval);
-
-    return () => {
-      if (backupInterval) {
-        clearInterval(backupInterval);
+    }
+  
+    // Set up interval for future checks
+    const interval = setInterval(() => {
+      if (isBackupNeeded()) {
+        createBackup();
       }
-    };
-  }, []);
+    }, 60 * 60 * 1000); // Check every hour
+  
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, []); // Empty dependency array ensures this runs once
+  
+  // Optional: Function to force a backup regardless of time
+  const forceBackup = () => {
+    createBackup();
+  };
+  
 
   // Remove returned books from rental history after 2 days
   useEffect(() => {
@@ -1212,7 +1263,7 @@ const LibraryManagementSystem: React.FC = () => {
           <input
             type="date"
             placeholder="Custom Return Date"
-            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-gray-700 text-white placeholder-white transition-all duration-200"
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white placeholder-white transition-all duration-200"
             value={customReturnDate}
             onChange={(e) => setCustomReturnDate(e.target.value)}
             required
@@ -2478,6 +2529,20 @@ const LibraryManagementSystem: React.FC = () => {
       {renderDeleteBookModal()}
       {renderReturnBookModal()}
       {renderDeleteUserModal()}
+
+      {/* Notifications */}
+      {notifications.length > 0 && (
+        <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-xl flex items-center space-x-2">
+          <Bell className="text-white" />
+          <div>
+            {notifications.map((notification, index) => (
+              <p key={index} className="text-sm">
+                {notification}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Export All Button */}
       <button
