@@ -5,7 +5,7 @@ import { Github, Instagram, Facebook, Moon } from "lucide-react";
 // import WelcomeModalTrigger from "../welcome";
 
 import Image from "next/image";
-import companyLogo from "../public/company-logo.png"; // Adjust the path as necessary
+// import companyLogo from "../public/company-logo.png"; // Adjust the path as necessary
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -115,7 +115,7 @@ const Footer = () => {
         {/* Company Logo */}
         <div className="mt-12 flex justify-center">
           <Image
-            src={companyLogo}
+            src="https://repo.sumit.info.np/images/brandicon.svg"
             alt="Company Logo"
             width={150}
             height={150}
