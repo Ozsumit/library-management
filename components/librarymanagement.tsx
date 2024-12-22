@@ -31,7 +31,7 @@ interface Book {
   id: number;
   title: string;
   author: string;
-  isbn: string;
+  class: string;
   genre: string;
   totalCopies: number;
   availableCopies: number;
@@ -65,7 +65,7 @@ interface SearchState {
     | "id"
     | "title"
     | "author"
-    | "isbn"
+    | "class"
     | "genre"
     | "totalCopies"
     | "availableCopies"
@@ -95,10 +95,6 @@ const LibraryManagementSystem: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [rentals, setRentals] = useState<Rental[]>([]);
-  const [lastBackupTime, setLastBackupTime] = useState<number | null>(null);
-  const [backupInterval, setBackupInterval] = useState<NodeJS.Timeout | null>(
-    null
-  );
 
   // Search states
   const [bookSearch, setBookSearch] = useState<SearchState>({
@@ -185,21 +181,16 @@ const LibraryManagementSystem: React.FC = () => {
   // Notifications State
   const [notifications, setNotifications] = useState<string[]>([]);
 
-  // Button Click Counter
-  const [buttonClickCount, setButtonClickCount] = useState(0);
-
   // Load data from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const localStorageBooks = localStorage.getItem("library-books");
       const localStorageUsers = localStorage.getItem("library-users");
       const localStorageRentals = localStorage.getItem("library-rentals");
-      const storedTime = localStorage.getItem("lastBackupTime");
 
       setBooks(localStorageBooks ? JSON.parse(localStorageBooks) : []);
       setUsers(localStorageUsers ? JSON.parse(localStorageUsers) : []);
       setRentals(localStorageRentals ? JSON.parse(localStorageRentals) : []);
-      setLastBackupTime(storedTime ? parseInt(storedTime, 10) : null);
     }
   }, []);
 
@@ -225,51 +216,36 @@ const LibraryManagementSystem: React.FC = () => {
     }
   }, [rentals]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const currentTime = new Date().getTime();
-      const twelveHoursInMillis = 12 * 60 * 60 * 1000;
-
-      if (
-        lastBackupTime &&
-        currentTime - lastBackupTime < twelveHoursInMillis
-      ) {
-        return;
-      }
-
-      createBackup();
-    }
-  }, [lastBackupTime]);
-
   // Export functionality
   const handleExport = (dataType: "books" | "users" | "rentals" | "all") => {
-    if (dataType === "all") {
-      createBackup();
-    } else {
-      let data: any[];
-      let filename: string;
+    let data: any[];
+    let filename: string;
 
-      switch (dataType) {
-        case "books":
-          data = books;
-          filename = "library-books.json";
-          break;
-        case "users":
-          data = users;
-          filename = "library-users.json";
-          break;
-        case "rentals":
-          data = rentals;
-          filename = "library-rentals.json";
-          break;
-      }
-
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: "application/json" });
-      saveAs(blob, filename);
-      setLastBackupTime(new Date().getTime());
-      localStorage.setItem("lastBackupTime", new Date().getTime().toString());
+    switch (dataType) {
+      case "books":
+        data = books;
+        filename = "library-books.json";
+        break;
+      case "users":
+        data = users;
+        filename = "library-users.json";
+        break;
+      case "rentals":
+        data = rentals;
+        filename = "library-rentals.json";
+        break;
+      case "all":
+      default:
+        data = { books, users, rentals };
+        filename = `backup-${new Date()
+          .toLocaleString()
+          .replace(/[/: ]/g, "-")}.json`;
+        break;
     }
+
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    saveAs(blob, filename);
   };
 
   // Import functionality
@@ -331,7 +307,7 @@ const LibraryManagementSystem: React.FC = () => {
   // Search Helpers
   const fuseOptions = {
     includeScore: true,
-    keys: ["title", "author", "isbn", "genre"],
+    keys: ["title", "author", "class", "genre"],
   };
 
   const fuseBooks = new Fuse(books, fuseOptions);
@@ -410,7 +386,7 @@ const LibraryManagementSystem: React.FC = () => {
     const newBook = { ...book, id: generateNumericId(books) };
     setBooks([...books, newBook]);
     setIsBookModalOpen(false);
-    incrementButtonClickCount();
+    createBackup();
   };
 
   const updateBook = (updatedBook: Book) => {
@@ -418,7 +394,7 @@ const LibraryManagementSystem: React.FC = () => {
       books.map((book) => (book.id === updatedBook.id ? updatedBook : book))
     );
     setIsBookModalOpen(false);
-    incrementButtonClickCount();
+    createBackup();
   };
 
   const deleteBook = (bookId: number) => {
@@ -431,7 +407,7 @@ const LibraryManagementSystem: React.FC = () => {
       setBooks(books.filter((book) => book.id !== selectedBook.id));
       setIsDeleteBookModalOpen(false);
       setSelectedBook(null);
-      incrementButtonClickCount();
+      createBackup();
     }
   };
 
@@ -444,7 +420,7 @@ const LibraryManagementSystem: React.FC = () => {
     };
     setUsers([...users, newUser]);
     setIsUserModalOpen(false);
-    incrementButtonClickCount();
+    createBackup();
   };
 
   const updateUser = (updatedUser: User) => {
@@ -452,7 +428,7 @@ const LibraryManagementSystem: React.FC = () => {
       users.map((user) => (user.id === updatedUser.id ? updatedUser : user))
     );
     setIsUserModalOpen(false);
-    incrementButtonClickCount();
+    createBackup();
   };
 
   const deleteUser = (userId: number) => {
@@ -465,7 +441,7 @@ const LibraryManagementSystem: React.FC = () => {
       setUsers(users.filter((user) => user.id !== selectedUser.id));
       setIsDeleteUserModalOpen(false);
       setSelectedUser(null);
-      incrementButtonClickCount();
+      createBackup();
     }
   };
 
@@ -508,7 +484,7 @@ const LibraryManagementSystem: React.FC = () => {
     );
 
     setIsRentalModalOpen(false);
-    incrementButtonClickCount();
+    createBackup();
   };
 
   const updateRental = (updatedRental: Rental) => {
@@ -517,6 +493,7 @@ const LibraryManagementSystem: React.FC = () => {
         rental.id === updatedRental.id ? updatedRental : rental
       )
     );
+    createBackup();
   };
 
   const deleteRental = (rentalId: number) => {
@@ -546,6 +523,7 @@ const LibraryManagementSystem: React.FC = () => {
       );
 
       setRentals(rentals.filter((rental) => rental.id !== rentalId));
+      createBackup();
     }
   };
 
@@ -631,6 +609,8 @@ const LibraryManagementSystem: React.FC = () => {
           users.find((user) => user.id === rental.userId)?.name
         }".`,
       ]);
+
+      createBackup();
     }
   };
 
@@ -667,6 +647,8 @@ const LibraryManagementSystem: React.FC = () => {
             : r
         )
       );
+
+      createBackup();
     }
   };
 
@@ -709,6 +691,8 @@ const LibraryManagementSystem: React.FC = () => {
             : r
         )
       );
+
+      createBackup();
     }
   };
 
@@ -733,26 +717,6 @@ const LibraryManagementSystem: React.FC = () => {
     await tx.oncomplete;
   };
 
-  // Initialize backup system - run this once when your app starts
-  const initializeBackupSystem = () => {
-    if (!localStorage.getItem("backupInitialized")) {
-      localStorage.setItem("backupInitialized", "true");
-      localStorage.setItem("lastBackupTime", new Date().getTime().toString());
-    }
-  };
-
-  // Check if backup is needed
-  const isBackupNeeded = () => {
-    const lastBackupTime = localStorage.getItem("lastBackupTime");
-    if (!lastBackupTime) return true; // Backup immediately if no record exists
-
-    const currentTime = new Date().getTime();
-    const timeDifference = currentTime - parseInt(lastBackupTime, 10);
-    const sixHoursInMs = 6 * 60 * 60 * 1000;
-
-    return timeDifference >= sixHoursInMs;
-  };
-
   // Create Backup Function
   const createBackup = () => {
     try {
@@ -769,48 +733,10 @@ const LibraryManagementSystem: React.FC = () => {
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
 
-      const timestamp = currentDate.getTime();
-      localStorage.setItem("lastBackupTime", timestamp.toString());
-
       console.log("Backup created at:", new Date().toLocaleString());
     } catch (error) {
       console.error("Backup creation failed:", error);
     }
-  };
-
-  // Increment Button Click Count
-  const incrementButtonClickCount = () => {
-    setButtonClickCount((prevCount) => prevCount + 1);
-    if (buttonClickCount >= 29) {
-      handleExport("all");
-
-      setButtonClickCount(0);
-    }
-  };
-
-  // Component setup
-  useEffect(() => {
-    // Initialize the backup system
-    initializeBackupSystem();
-
-    // Check if a backup is needed immediately upon load
-    if (isBackupNeeded()) {
-      handleExport("all");
-    }
-
-    // Set up interval for future checks
-    const interval = setInterval(() => {
-      if (isBackupNeeded()) {
-        handleExport("all");
-      }
-    }, 60 * 60 * 1000); // Check every hour
-
-    return () => clearInterval(interval); // Cleanup interval on unmount
-  }, []); // Empty dependency array ensures this runs once
-
-  // Optional: Function to force a backup regardless of time
-  const forceBackup = () => {
-    createBackup();
   };
 
   // Remove returned books from rental history after 2 days
@@ -866,7 +792,7 @@ const LibraryManagementSystem: React.FC = () => {
               | "id"
               | "title"
               | "author"
-              | "isbn"
+              | "class"
               | "genre"
               | "totalCopies"
               | "availableCopies",
@@ -877,7 +803,7 @@ const LibraryManagementSystem: React.FC = () => {
         <option value="id">Sort by ID</option>
         <option value="title">Sort by Title</option>
         <option value="author">Sort by Author</option>
-        <option value="isbn">Sort by ISBN</option>
+        <option value="class">Sort by Class</option>
         <option value="genre">Sort by Genre</option>
         <option value="totalCopies">Sort by Total Copies</option>
         <option value="availableCopies">Sort by Available Copies</option>
@@ -1090,13 +1016,13 @@ const LibraryManagementSystem: React.FC = () => {
             />
             <input
               type="text"
-              placeholder="ISBN"
+              placeholder="Class"
               className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
-              value={currentBook?.isbn || ""}
+              value={currentBook?.class || ""}
               onChange={(e) =>
                 setCurrentBook({
                   ...currentBook!,
-                  isbn: e.target.value,
+                  class: e.target.value,
                 })
               }
               required
@@ -1748,7 +1674,7 @@ const LibraryManagementSystem: React.FC = () => {
                     id: 0,
                     title: "",
                     author: "",
-                    isbn: "",
+                    class: "",
                     genre: "",
                     totalCopies: 0,
                     availableCopies: 0,
@@ -1765,7 +1691,7 @@ const LibraryManagementSystem: React.FC = () => {
                     <th className="p-3 border text-white">ID</th>
                     <th className="p-3 border text-white">Title</th>
                     <th className="p-3 border text-white">Author</th>
-                    <th className="p-3 border text-white">ISBN</th>
+                    <th className="p-3 border text-white">Class</th>
                     <th className="p-3 border text-white">Genre</th>
                     <th className="p-3 border text-white">Total Copies</th>
                     <th className="p-3 border text-white">Available</th>
@@ -1778,7 +1704,7 @@ const LibraryManagementSystem: React.FC = () => {
                       <td className="p-3 border text-white">{book.id}</td>
                       <td className="p-3 border text-white">{book.title}</td>
                       <td className="p-3 border text-white">{book.author}</td>
-                      <td className="p-3 border text-white">{book.isbn}</td>
+                      <td className="p-3 border text-white">{book.class}</td>
                       <td className="p-3 border text-white">{book.genre}</td>
                       <td className="p-3 border text-center text-white">
                         {book.totalCopies}
@@ -2147,7 +2073,7 @@ const LibraryManagementSystem: React.FC = () => {
                 | "id"
                 | "title"
                 | "author"
-                | "isbn"
+                | "class"
                 | "genre"
                 | "totalCopies"
                 | "availableCopies",
@@ -2158,7 +2084,7 @@ const LibraryManagementSystem: React.FC = () => {
           <option value="id">Sort by ID</option>
           <option value="title">Sort by Title</option>
           <option value="author">Sort by Author</option>
-          <option value="isbn">Sort by ISBN</option>
+          <option value="class">Sort by Class</option>
           <option value="genre">Sort by Genre</option>
           <option value="totalCopies">Sort by Total Copies</option>
           <option value="availableCopies">Sort by Available Copies</option>
@@ -2657,7 +2583,11 @@ const LibraryManagementSystem: React.FC = () => {
       </button>
       <p className="mt-4 text-white">
         Last Backup Time:{" "}
-        {lastBackupTime ? new Date(lastBackupTime).toLocaleString() : "N/A"}
+        {localStorage.getItem("lastBackupTime")
+          ? new Date(
+              parseInt(localStorage.getItem("lastBackupTime")!, 10)
+            ).toLocaleString()
+          : "N/A"}
       </p>
       <div className="mt-4">
         <h3 className="text-2xl font-semibold mb-4 text-white">
@@ -2792,7 +2722,7 @@ const LibraryManagementSystem: React.FC = () => {
                   id: 0,
                   title: "",
                   author: "",
-                  isbn: "",
+                  class: "",
                   genre: "",
                   totalCopies: 0,
                   availableCopies: 0,
@@ -2813,7 +2743,7 @@ const LibraryManagementSystem: React.FC = () => {
                 <th className="p-3 border text-white">ID</th>
                 <th className="p-3 border text-white">Title</th>
                 <th className="p-3 border text-white">Author</th>
-                <th className="p-3 border text-white">ISBN</th>
+                <th className="p-3 border text-white">Class</th>
                 <th className="p-3 border text-white">Genre</th>
                 <th className="p-3 border text-white">Total Copies</th>
                 <th className="p-3 border text-white">Available</th>
@@ -2826,7 +2756,7 @@ const LibraryManagementSystem: React.FC = () => {
                   <td className="p-3 border text-white">{book.id}</td>
                   <td className="p-3 border text-white">{book.title}</td>
                   <td className="p-3 border text-white">{book.author}</td>
-                  <td className="p-3 border text-white">{book.isbn}</td>
+                  <td className="p-3 border text-white">{book.class}</td>
                   <td className="p-3 border text-white">{book.genre}</td>
                   <td className="p-3 border text-center text-white">
                     {book.totalCopies}
