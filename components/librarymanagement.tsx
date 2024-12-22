@@ -28,6 +28,7 @@ import { motion } from "framer-motion";
 import Fuse from "fuse.js";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Footer from "./footer";
 
 // Types
 interface Book {
@@ -1607,6 +1608,7 @@ const LibraryManagementSystem: React.FC = () => {
             >
               Login
             </button>
+            <Footer/>
           </div>
         ) : (
           <div>
