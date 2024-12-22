@@ -71,12 +71,17 @@ interface SearchState {
     | "availableCopies"
     | "name"
     | "email"
-    | "class"
     | "membershipDate"
     | "rentalDate"
     | "dueDate"
     | "returnDate"
     | "customReturnDate";
+}
+
+interface ExportData {
+  books: Book[];
+  users: User[];
+  rentals: Rental[];
 }
 
 const LibraryManagementSystem: React.FC = () => {
@@ -218,7 +223,7 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Export functionality
   const handleExport = (dataType: "books" | "users" | "rentals" | "all") => {
-    let data: any[];
+    let data: any;
     let filename: string;
 
     switch (dataType) {
@@ -236,7 +241,7 @@ const LibraryManagementSystem: React.FC = () => {
         break;
       case "all":
       default:
-        data = { books, users, rentals };
+        data = { books, users, rentals } as ExportData;
         filename = `backup-${new Date()
           .toLocaleString()
           .replace(/[/: ]/g, "-")}.json`;
