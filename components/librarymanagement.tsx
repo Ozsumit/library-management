@@ -20,11 +20,14 @@ import {
   Image as ImageIcon,
   Palette,
   Type,
+  Loader2,
 } from "lucide-react";
 import { openDB } from "idb";
 import { saveAs } from "file-saver";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Types
 interface Book {
@@ -56,6 +59,7 @@ interface Rental {
   returnDate?: string;
   customReturnDate?: string;
   returnTime?: string; // Add return time
+  rentalType: "short" | "long"; // Add rental type
 }
 
 interface SearchState {
@@ -71,17 +75,12 @@ interface SearchState {
     | "availableCopies"
     | "name"
     | "email"
+    | "class"
     | "membershipDate"
     | "rentalDate"
     | "dueDate"
     | "returnDate"
     | "customReturnDate";
-}
-
-interface ExportData {
-  books: Book[];
-  users: User[];
-  rentals: Rental[];
 }
 
 const LibraryManagementSystem: React.FC = () => {
@@ -168,6 +167,7 @@ const LibraryManagementSystem: React.FC = () => {
   const [verificationUserId, setVerificationUserId] = useState("");
   const [rentVerificationUserId, setRentVerificationUserId] = useState("");
   const [customReturnDate, setCustomReturnDate] = useState(""); // State for custom return date
+  const [rentalType, setRentalType] = useState<"short" | "long">("short"); // State for rental type
 
   // Admin Panel State
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
@@ -183,8 +183,8 @@ const LibraryManagementSystem: React.FC = () => {
   const [secondaryButtonColor, setSecondaryButtonColor] = useState("#10b981");
   const [backgroundImage, setBackgroundImage] = useState("");
 
-  // Notifications State
-  const [notifications, setNotifications] = useState<string[]>([]);
+  // Loading State
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -223,7 +223,7 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Export functionality
   const handleExport = (dataType: "books" | "users" | "rentals" | "all") => {
-    let data: any;
+    let data: any[] | { books: Book[]; users: User[]; rentals: Rental[] };
     let filename: string;
 
     switch (dataType) {
@@ -241,7 +241,7 @@ const LibraryManagementSystem: React.FC = () => {
         break;
       case "all":
       default:
-        data = { books, users, rentals } as ExportData;
+        data = { books, users, rentals };
         filename = `backup-${new Date()
           .toLocaleString()
           .replace(/[/: ]/g, "-")}.json`;
@@ -284,9 +284,9 @@ const LibraryManagementSystem: React.FC = () => {
             );
             break;
         }
-        alert("Import successful!");
+        toast.success("Import successful!");
       } catch (error) {
-        alert("Error importing file. Please ensure it is a valid JSON file.");
+        toast.error("Error importing file. Please ensure it is a valid JSON file.");
       }
     };
     reader.readAsText(file);
@@ -454,12 +454,14 @@ const LibraryManagementSystem: React.FC = () => {
   const addRental = (
     bookId: number,
     userId: number,
-    customReturnDate: string
+    customReturnDate: string,
+    rentalType: "short" | "long"
   ) => {
     const rentalDate = new Date().toISOString();
-    const dueDate = new Date(
-      Date.now() + 14 * 24 * 60 * 60 * 1000
-    ).toISOString(); // 14 days from now
+    const dueDate =
+      rentalType === "short"
+        ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days from now
+        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year from now
     const newRental = {
       id: generateNumericId(rentals),
       bookId,
@@ -467,6 +469,7 @@ const LibraryManagementSystem: React.FC = () => {
       rentalDate,
       dueDate,
       customReturnDate,
+      rentalType,
     };
     setRentals([...rentals, newRental]);
 
@@ -543,7 +546,7 @@ const LibraryManagementSystem: React.FC = () => {
       setSelectedRental(null);
       setVerificationUserId("");
     } else {
-      alert("Verification failed. Please enter the correct user ID.");
+      toast.error("Verification failed. Please enter the correct user ID.");
     }
   };
 
@@ -554,14 +557,15 @@ const LibraryManagementSystem: React.FC = () => {
       selectedUser.id === parseInt(rentVerificationUserId) &&
       rentVerificationUserId.trim() !== ""
     ) {
-      addRental(selectedBook.id, selectedUser.id, customReturnDate);
+      addRental(selectedBook.id, selectedUser.id, customReturnDate, rentalType);
       setIsRentVerificationModalOpen(false);
       setSelectedBook(null);
       setSelectedUser(null);
       setRentVerificationUserId("");
       setCustomReturnDate(""); // Reset custom return date
+      setRentalType("short"); // Reset rental type
     } else {
-      alert("Verification failed. Please enter the correct user ID.");
+      toast.error("Verification failed. Please enter the correct user ID.");
     }
   };
 
@@ -606,14 +610,13 @@ const LibraryManagementSystem: React.FC = () => {
       );
 
       // Add notification
-      setNotifications((prevNotifications) => [
-        ...prevNotifications,
+      toast.success(
         `Book "${
           books.find((book) => book.id === rental.bookId)?.title
         }" returned by user "${
           users.find((user) => user.id === rental.userId)?.name
-        }".`,
-      ]);
+        }".`
+      );
 
       createBackup();
     }
@@ -1352,7 +1355,14 @@ const LibraryManagementSystem: React.FC = () => {
             onChange={(e) => setCustomReturnDate(e.target.value)}
             required
           />
-
+          <select
+            value={rentalType}
+            onChange={(e) => setRentalType(e.target.value as "short" | "long")}
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+          >
+            <option value="short">Short Term (14 days)</option>
+            <option value="long">Long Term (1 year)</option>
+          </select>
           <div className="flex justify-between">
             <button
               type="button"
@@ -1374,6 +1384,7 @@ const LibraryManagementSystem: React.FC = () => {
       </motion.div>
     );
   };
+
   // Render Delete Rental Modal
   const renderDeleteRentalModal = () => {
     if (!isDeleteRentalModalOpen) return null;
@@ -1590,7 +1601,7 @@ const LibraryManagementSystem: React.FC = () => {
                 if (adminPassword === "admin123") {
                   setIsAdminAuthenticated(true);
                 } else {
-                  alert("Incorrect password. Please try again.");
+                  toast.error("Incorrect password. Please try again.");
                 }
               }}
             >
@@ -2885,18 +2896,7 @@ const LibraryManagementSystem: React.FC = () => {
       {renderDeleteUserModal()}
 
       {/* Notifications */}
-      {notifications.length > 0 && (
-        <div className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-2 rounded-xl flex items-center space-x-2">
-          <Bell className="text-white" />
-          <div>
-            {notifications.map((notification, index) => (
-              <p key={index} className="text-sm">
-                {notification}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
+      <ToastContainer position="bottom-right" autoClose={3000} />
 
       {/* Export All Button */}
       <button
