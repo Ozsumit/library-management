@@ -26,7 +26,7 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-200 rounded-t-3xl shadow-2xl py-16 px-4 sm:px-6">
+    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-200 py-16 px-4 sm:px-6">
       <div className="container mx-auto max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand Section */}
@@ -59,7 +59,7 @@ const Footer = () => {
             <h2 className="text-white font-semibold text-xl border-b-2 border-indigo-500 pb-2 w-full text-center md:text-left">
               Connect With Us
             </h2>
-            <div className="flex space-x-6">
+            <div className="flex space-x-6 justify-center">
               {socialLinks.map((social) => (
                 <Link
                   key={social.label}
@@ -73,35 +73,41 @@ const Footer = () => {
                 </Link>
               ))}
             </div>
-            <div className="bg-gray-800 border border-gray-700 rounded-xl p-5 shadow-lg w-full text-center">
-              <p className="text-gray-400 mb-3">
-                Join our community and grow with us!
-              </p>
-              <Link
-                href="/about"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-all transform hover:scale-105 inline-block"
-              >
-                Learn More
-              </Link>
-            </div>
+          </div>
+
+          {/* Call to Action */}
+          <div className="flex flex-col items-center md:items-start space-y-6">
+            <h2 className="text-white font-semibold text-xl border-b-2 border-indigo-500 pb-2 w-full text-center md:text-left">
+              Join Our Community
+            </h2>
+            <p className="text-gray-400 max-w-xs text-center md:text-left">
+              Be part of something great. Stay updated with our latest
+              innovations and exclusive offers.
+            </p>
+            <Link
+              href="/about"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition-all transform hover:scale-105 inline-block"
+            >
+              Learn More
+            </Link>
           </div>
         </div>
 
         {/* Footer Bottom */}
-        <div className="mt-12 border-t border-gray-700 pt-6 text-sm flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 mb-4 md:mb-0 text-center w-full md:w-auto">
+        <div className="mt-12 border-t border-gray-700 pt-6 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-400 text-center md:text-left mb-4 md:mb-0">
             &copy; {currentYear} Vass.inc. All rights reserved.
           </p>
-          <div className="space-x-4 flex flex-col md:flex-row items-center text-center w-full md:w-auto">
+          <div className="space-x-6 flex items-center">
             <Link
               href="/privacy"
-              className="text-gray-400 hover:text-indigo-400 transition-colors mb-2 md:mb-0 block md:inline"
+              className="text-gray-400 hover:text-indigo-400 transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-gray-400 hover:text-indigo-400 transition-colors block md:inline"
+              className="text-gray-400 hover:text-indigo-400 transition-colors"
             >
               Terms of Service
             </Link>
