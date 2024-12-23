@@ -29,6 +29,7 @@ import Fuse from "fuse.js";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Footer from "./footer";
+import Link from "next/link";
 
 // Types
 interface Book {
@@ -94,6 +95,7 @@ const LibraryManagementSystem: React.FC = () => {
     | "backup"
     | "returned"
     | "admin"
+    | "tools"
   >("books");
 
   // Initialize state with localStorage
@@ -183,6 +185,18 @@ const LibraryManagementSystem: React.FC = () => {
   const [primaryButtonColor, setPrimaryButtonColor] = useState("#3b82f6");
   const [secondaryButtonColor, setSecondaryButtonColor] = useState("#10b981");
   const [backgroundImage, setBackgroundImage] = useState("");
+
+  // ID Card Template State
+  const [idCardTemplate, setIdCardTemplate] = useState(`
+    ID Card
+    --------
+    Name: {name}
+    ID: {id}
+    Class: {class}
+    Email: {email}
+    Phone: {phone}
+    Membership Date: {membershipDate}
+  `);
 
   // Loading State
   const [isLoading, setIsLoading] = useState(false);
@@ -287,7 +301,9 @@ const LibraryManagementSystem: React.FC = () => {
         }
         toast.success("Import successful!");
       } catch (error) {
-        toast.error("Error importing file. Please ensure it is a valid JSON file.");
+        toast.error(
+          "Error importing file. Please ensure it is a valid JSON file."
+        );
       }
     };
     reader.readAsText(file);
@@ -474,7 +490,7 @@ const LibraryManagementSystem: React.FC = () => {
     };
     setRentals([...rentals, newRental]);
 
-    // Update the book's available copies
+    // Update the book's available copes
     setBooks(
       books.map((book) =>
         book.id === bookId
@@ -508,7 +524,7 @@ const LibraryManagementSystem: React.FC = () => {
   const deleteRental = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
+      // Update the book's available copes
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -570,11 +586,11 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Return Book Function
+  // Return Book Funcion
   const returnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
+      // Update the book's available copes
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -610,7 +626,7 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Add notification
+      // Add notificaton
       toast.success(
         `Book "${
           books.find((book) => book.id === rental.bookId)?.title
@@ -623,11 +639,11 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Undo Return Book Function
+  // Undo Return Book Funcion
   const undoReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
+      // Update the book's available copes
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -661,11 +677,11 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Confirm Return Book Function
+  // Confirm Return Book Funcion
   const confirmReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
+      // Update the book's available copes
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -706,7 +722,7 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Generate Numeric ID
-  const generateNumericId = (items: any[]): number => {
+  const generateNumericId = (items: any[]) => {
     if (items.length === 0) return 1;
     const maxId = Math.max(...items.map((item) => item.id));
     return maxId + 1;
@@ -726,7 +742,7 @@ const LibraryManagementSystem: React.FC = () => {
     await tx.oncomplete;
   };
 
-  // Create Backup Function
+  // Create Backup Funcion
   const createBackup = () => {
     try {
       const currentDate = new Date();
@@ -1608,7 +1624,7 @@ const LibraryManagementSystem: React.FC = () => {
             >
               Login
             </button>
-            <Footer/>
+            <Footer />
           </div>
         ) : (
           <div>
@@ -1798,7 +1814,7 @@ const LibraryManagementSystem: React.FC = () => {
                           : "N/A"}
                       </td>
                       <td className="p-3 border text-white">
-                        {rental.returnTime ? rental.returnTime : "N/A"}
+                        {rental.returnTime || "N/A"}
                       </td>
                       <td className="p-3 border text-white">
                         {rental.returnDate ? (
@@ -2184,7 +2200,7 @@ const LibraryManagementSystem: React.FC = () => {
           onClick={() =>
             setRentalHistorySearch({ type: "id", query: "", sortBy: "id" })
           }
-          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
+          className="bg-gray-600 text-white px-4 py-2 rounded-lg w-full md:w-auto hover:bg-gray-500 transition-colors"
         >
           Clear
         </button>
@@ -2624,6 +2640,92 @@ const LibraryManagementSystem: React.FC = () => {
     </div>
   );
 
+  // Render Tools Tab
+  const renderToolsTab = () => (
+    <div className="bg-gray-900 p-6 rounded-lg">
+      <h2 className="text-3xl font-bold mb-6 text-white">Tools</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* ID Card Generator */}
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            ID Card Generator
+          </h3>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-white">
+              Select User
+            </label>
+            <select
+              value={selectedUser?.id || ""}
+              onChange={(e) =>
+                setSelectedUser(
+                  users.find((user) => user.id === parseInt(e.target.value)) ||
+                    null
+                )
+              }
+              className="w-full border p-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+            >
+              <option value="" disabled>
+                Select a user
+              </option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-white">
+              ID Card Template
+            </label>
+            <textarea
+              value={idCardTemplate}
+              onChange={(e) => setIdCardTemplate(e.target.value)}
+              className="w-full border p-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+              rows={10}
+            />
+          </div>
+          <button
+            onClick={generateIdCard}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            Generate ID Card
+          </button>
+        </div>
+
+        {/* Reset DB Button */}
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Reset Database
+          </h3>
+          <p className="mb-4 text-white">
+            This action will reset the database to its initial state. All data
+            will be lost.
+          </p>
+          <button
+            onClick={resetDatabase}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Reset Database
+          </button>
+        </div>
+
+        {/* //bulk book */}
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Bulk Book Addition
+          </h3>
+          <p className="mb-4 text-white">Add books on bulk with easy layout</p>
+          <Link href="/books">
+            <button className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+              Add Books
+            </button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+
   // Group rentals by user
   const groupRentalsByUser = (rentals: Rental[]) => {
     const groupedRentals: { userId: number; rentals: Rental[] }[] = [];
@@ -2635,6 +2737,109 @@ const LibraryManagementSystem: React.FC = () => {
     });
 
     return groupedRentals;
+  };
+
+  // Generate ID Card
+  const generateIdCard = () => {
+    if (!selectedUser) {
+      toast.error("Please select a user to generate an ID card.");
+      return;
+    }
+
+    const idCardContent = idCardTemplate
+      .replace("{name}", selectedUser.name)
+      .replace("{id}", selectedUser.id.toString())
+      .replace("{class}", selectedUser.class)
+      .replace("{email}", selectedUser.email)
+      .replace("{phone}", selectedUser.phone || "N/A")
+      .replace(
+        "{membershipDate}",
+        new Date(selectedUser.membershipDate).toLocaleDateString()
+      );
+
+    const blob = new Blob([idCardContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `ID_Card_${selectedUser.name}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Reset Database
+  const resetDatabase = () => {
+    const adminPassword = "admin123"; // Define the required password
+  
+    const userInput = window.prompt(
+      "Enter the admin password to reset the database:"
+    );
+  
+    if (userInput === adminPassword) {
+      if (
+        window.confirm(
+          "Are you sure you want to reset the database? All data will be lost."
+        )
+      ) {
+        localStorage.clear();
+        setBooks([]);
+        setUsers([]);
+        setRentals([]);
+        toast.success("Database has been reset.");
+      }
+    } else {
+      toast.error("Incorrect password. Database reset canceled.");
+    }
+  };
+  
+  // Render Reset Database Modal
+  const [isResetDatabaseModalOpen, setIsResetDatabaseModalOpen] =
+    useState(false);
+  const renderResetDatabaseModal = () => {
+    if (!isResetDatabaseModalOpen) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+      >
+        <div className="bg-gray-800 p-6 rounded-xl w-full max-w-md shadow-lg text-white">
+          <h2 className="text-2xl font-bold mb-4">Reset Database</h2>
+          <p className="mb-4">
+            This action will reset the database to its initial state. All data
+            will be lost.
+          </p>
+          <input
+            type="password"
+            placeholder="Enter Admin Password"
+            className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+            value={adminPassword}
+            onChange={(e) => setAdminPassword(e.target.value)}
+            required
+          />
+          <div className="flex justify-between">
+            <button
+              type="button"
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+              onClick={resetDatabase}
+              disabled={!adminPassword.trim()}
+            >
+              Reset Database
+            </button>
+            <button
+              type="button"
+              className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+              onClick={() => setIsResetDatabaseModalOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
   };
 
   return (
@@ -2727,6 +2932,17 @@ const LibraryManagementSystem: React.FC = () => {
         >
           <Lock />
           <span>Admin</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("tools")}
+          className={`flex items-center space-x-2 p-3 rounded-xl ${
+            activeTab === "tools"
+              ? "bg-blue-500 text-white"
+              : "bg-gray-700 text-gray-300"
+          }`}
+        >
+          <Settings />
+          <span>Tools</span>
         </button>
       </div>
 
@@ -2886,6 +3102,8 @@ const LibraryManagementSystem: React.FC = () => {
       {activeTab === "backup" && renderBackupTab()}
 
       {activeTab === "admin" && renderAdminPanel()}
+
+      {activeTab === "tools" && renderToolsTab()}
 
       {renderBookModal()}
       {renderUserModal()}
