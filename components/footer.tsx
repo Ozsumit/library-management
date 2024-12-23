@@ -27,14 +27,17 @@ const Footer = () => {
 
   return (
     <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-200 py-16 px-4 sm:px-6">
+    <footer className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-200 py-16 px-4 sm:px-6">
       <div className="container mx-auto max-w-7xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
           {/* Brand Section */}
           <div className="flex flex-col items-center md:items-start space-y-6">
             <Link href="/" className="group">
               <div className="relative flex items-center justify-center w-20 h-20">
+              <div className="relative flex items-center justify-center w-20 h-20">
                 <Moon
                   className="text-indigo-500 fill-indigo-500 group-hover:rotate-12 transition-transform"
+                  size={80}
                   size={80}
                 />
                 <Image
@@ -44,7 +47,17 @@ const Footer = () => {
                   height={40}
                   className="absolute"
                 />
+                <Image
+                  src="https://repo.sumit.info.np/images/brandicon.svg"
+                  alt="Company Logo"
+                  width={40}
+                  height={40}
+                  className="absolute"
+                />
               </div>
+              <h1 className="text-white font-bold text-3xl group-hover:text-indigo-400 transition-colors mt-3">
+                Vass.inc
+              </h1>
               <h1 className="text-white font-bold text-3xl group-hover:text-indigo-400 transition-colors mt-3">
                 Vass.inc
               </h1>
@@ -60,6 +73,7 @@ const Footer = () => {
             <h2 className="text-white font-semibold text-xl border-b-2 border-indigo-500 pb-2 w-full text-center md:text-left">
               Connect With Us
             </h2>
+            <div className="flex space-x-6 justify-center">
             <div className="flex space-x-6 justify-center">
               {socialLinks.map((social) => (
                 <Link
@@ -98,16 +112,22 @@ const Footer = () => {
         <div className="mt-12 border-t border-gray-700 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-center md:text-left mb-4 md:mb-0">
             &copy; {currentYear} Vass.inc. All rights reserved.
+        <div className="mt-12 border-t border-gray-700 pt-6 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-400 text-center md:text-left mb-4 md:mb-0">
+            &copy; {currentYear} Vass.inc. All rights reserved.
           </p>
+          <div className="space-x-6 flex items-center">
           <div className="space-x-6 flex items-center">
             <Link
               href="/privacy"
+              className="text-gray-400 hover:text-indigo-400 transition-colors"
               className="text-gray-400 hover:text-indigo-400 transition-colors"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
+              className="text-gray-400 hover:text-indigo-400 transition-colors"
               className="text-gray-400 hover:text-indigo-400 transition-colors"
             >
               Terms of Service
