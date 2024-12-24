@@ -328,7 +328,7 @@ const LibraryManagementSystem: React.FC = () => {
     return [...existingData, ...mergedData];
   };
 
-  // Search Helpers
+  // Enhanced Search Helpers
   const fuseOptions = {
     includeScore: true,
     keys: ["title", "sources", "class", "genre"],
@@ -350,58 +350,66 @@ const LibraryManagementSystem: React.FC = () => {
       "customReturnDate",
     ],
   });
-
   const searchBooks = (books: Book[]): Book[] => {
     if (!bookSearch.query) return books;
     const result = fuseBooks.search(bookSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchUsers = (users: User[]): User[] => {
     if (!userSearch.query) return users;
     const result = fuseUsers.search(userSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchRentalUsers = (users: User[]): User[] => {
     if (!rentalUserSearch.query) return users;
     const result = fuseUsers.search(rentalUserSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchRental = (users: User[]): User[] => {
     if (!rentalSearch.query) return users;
     const result = fuseUsers.search(rentalSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchRentalHistory = (rentals: Rental[]): Rental[] => {
     if (!rentalHistorySearch.query) return rentals;
     const result = fuseRentals.search(rentalHistorySearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchUnreturnedBooks = (rentals: Rental[]): Rental[] => {
     if (!unreturnedBooksSearch.query) return rentals;
     const result = fuseRentals.search(unreturnedBooksSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchBookRentals = (rentals: Rental[]): Rental[] => {
     if (!bookRentalSearch.query) return rentals;
     const result = fuseRentals.search(bookRentalSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchAvailableBooks = (books: Book[]): Book[] => {
     if (!availableBookSearch.query) return books;
     const result = fuseBooks.search(availableBookSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
   const searchReturnedBooks = (rentals: Rental[]): Rental[] => {
     if (!returnedBooksSearch.query) return rentals;
     const result = fuseRentals.search(returnedBooksSearch.query);
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
 
@@ -1631,7 +1639,7 @@ const LibraryManagementSystem: React.FC = () => {
             >
               Login
             </button>
-            <Link href="/books">Bul;k add</Link>
+            <Link href="/books">Bulk add</Link>
             <Footer />
           </div>
         ) : (
@@ -2088,7 +2096,7 @@ const LibraryManagementSystem: React.FC = () => {
   // Render Available Book Search
   const renderAvailableBookSearch = () => (
     <div className="p-4 border-b border-gray-700">
-      <div className="flex flex-col  md:flex-row gap-3">
+      <div className="flex flex-col md:flex-row gap-3">
         <select
           value={availableBookSearch.type}
           onChange={(e) =>
@@ -2218,7 +2226,7 @@ const LibraryManagementSystem: React.FC = () => {
           onClick={() =>
             setRentalHistorySearch({ type: "id", query: "", sortBy: "id" })
           }
-          className="bg-gray-600 text-white px-4 py-2 rounded-lg w-full md:w-auto hover:bg-gray-500 transition-colors"
+          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
         >
           Clear
         </button>
@@ -3020,9 +3028,9 @@ const LibraryManagementSystem: React.FC = () => {
                   <td className="p-3 border text-center text-white">
                     {book.availableCopies}
                   </td>
-                  {/* <  td className="p-3 border text-center text-white">
+                  {/* <td className="p-3 border text-center text-white">
                     {book.donated ? "Yes" : "No"}
-                  </>
+                  </td>
                   <td className="p-3 border text-center text-white">
                     {book.bought ? "Yes" : "No"}
                   </td> */}
