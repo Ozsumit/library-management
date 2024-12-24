@@ -12,12 +12,8 @@ interface Book {
   availableCopies: number;
 }
 
-interface BulkBookAdditionProps {
-  books: Book[];
-  onAddBooks: (newBooks: Book[]) => void;
-}
-
-const BulkBookAddition = ({ books, onAddBooks }: BulkBookAdditionProps) => {
+const BulkBookAddition = () => {
+  const [books, setBooks] = useState<Book[]>([]);
   const [newBooks, setNewBooks] = useState<Book[]>([
     {
       id: 0,
@@ -89,19 +85,12 @@ const BulkBookAddition = ({ books, onAddBooks }: BulkBookAdditionProps) => {
         book.availableCopies > 0
     );
 
-    // Get the next available ID
-    const nextId =
-      books.length > 0 ? Math.max(...books.map((book) => book.id)) + 1 : 1;
-
     const updatedBooks = validBooks.map((book, index) => ({
       ...book,
-      id: nextId + index,
+      id: books.length + index + 1,
     }));
 
-    // Call parent's onAddBooks function
-    onAddBooks(updatedBooks);
-
-    // Clear the form
+    setBooks([...books, ...updatedBooks]);
     setNewBooks([
       {
         id: 0,
@@ -127,16 +116,12 @@ const BulkBookAddition = ({ books, onAddBooks }: BulkBookAdditionProps) => {
         book.availableCopies > 0
     );
 
-    // Get the next available ID
-    const nextId =
-      books.length > 0 ? Math.max(...books.map((book) => book.id)) + 1 : 1;
-
     // Combine existing books with valid new books
     const booksToExport = [
       ...books,
       ...validNewBooks.map((book, index) => ({
         ...book,
-        id: nextId + index,
+        id: books.length + index + 1,
       })),
     ];
 
