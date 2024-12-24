@@ -1,71 +1,73 @@
-"use client";
-import React from "react";
-import { Download, Upload } from "lucide-react";
+// // components/Countdown.js
+// import { useEffect, useState } from "react";
+// import { motion } from "framer-motion";
+// import styles from "../styles/Countdown.module.css";
 
-interface SearchProps {
-  searchState: { type: "id" | "name"; query: string };
-  setSearchState: React.Dispatch<
-    React.SetStateAction<{ type: "id" | "name"; query: string }>
-  >;
-  handleExport: () => void;
-  handleImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
-}
+// const Countdown = () => {
+//   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
-const Search: React.FC<SearchProps> = ({
-  searchState,
-  setSearchState,
-  handleExport,
-  handleImport,
-  placeholder,
-}) => {
-  return (
-    <div className="flex items-center mb-4 space-x-2">
-      <select
-        value={searchState.type}
-        onChange={(e) =>
-          setSearchState({
-            ...searchState,
-            type: e.target.value as "id" | "name",
-          })
-        }
-        className="border p-2 rounded"
-      >
-        <option value="id">Search by ID</option>
-        <option value="name">Search by Name</option>
-      </select>
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={searchState.query}
-        onChange={(e) =>
-          setSearchState({ ...searchState, query: e.target.value })
-        }
-        className="border p-2 rounded flex-grow"
-      />
-      <button
-        onClick={() => setSearchState({ type: "id", query: "" })}
-        className="bg-gray-200 p-2 rounded"
-      >
-        Clear
-      </button>
-      <button
-        onClick={handleExport}
-        className="bg-blue-500 text-white p-2 rounded flex items-center"
-      >
-        <Download size={16} className="mr-1" /> Export
-      </button>
-      <label className="bg-green-500 text-white p-2 rounded flex items-center cursor-pointer">
-        <Upload size={16} className="mr-1" /> Import
-        <input
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={handleImport}
-        />
-      </label>
-    </div>
-  );
-};
+//   useEffect(() => {
+//     const timer = setTimeout(() => {
+//       setTimeLeft(calculateTimeLeft());
+//     }, 1000);
 
-export default Search;
+//     return () => clearTimeout(timer);
+//   });
+
+//   const calculateTimeLeft = () => {
+//     const difference = +new Date("2025-01-01T00:00:00") - +new Date();
+//     let timeLeft = {};
+
+//     if (difference > 0) {
+//       timeLeft = {
+//         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+//         hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+//         minutes: Math.floor((difference / 1000 / 60) % 60),
+//         seconds: Math.floor((difference / 1000) % 60),
+//       };
+//     }
+
+//     return timeLeft;
+//   };
+
+//   const { days, hours, minutes, seconds } = timeLeft;
+
+//   return (
+//     <div className={styles.countdown}>
+//       <motion.div
+//         className={styles.time}
+//         initial={{ opacity: 0, y: -50 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 1 }}
+//       >
+//         <span>{days}</span> Days
+//       </motion.div>
+//       <motion.div
+//         className={styles.time}
+//         initial={{ opacity: 0, y: -50 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 1 }}
+//       >
+//         <span>{hours}</span> Hours
+//       </motion.div>
+//       <motion.div
+//         className={styles.time}
+//         initial={{ opacity: 0, y: -50 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 1 }}
+//       >
+//         <span>{minutes}</span> Minutes
+//       </motion.div>
+//       <motion.div
+//         className={styles.time}
+//         initial={{ opacity: 0, y: -50 }}
+//         animate={{ opacity: 1, y: 0 }}
+//         transition={{ duration: 1 }}
+//       >
+//         <span>{seconds}</span> Seconds
+//       </motion.div>
+//     </div>
+//   );
+// };
+
+// export default Countdown;
