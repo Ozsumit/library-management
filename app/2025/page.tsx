@@ -5,7 +5,6 @@ import {
   Heart,
   PartyPopper,
   Sparkles,
-  Music,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -356,7 +355,7 @@ const NewYearCountdown: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black flex flex-col items-center justify-center relative overflow-hidden p-4">
       <div className="absolute inset-0 opacity-60">{backgroundElements}</div>
 
       {particles.map((particle) => (
@@ -381,7 +380,7 @@ const NewYearCountdown: React.FC = () => {
       />
 
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <div className="text-[150px] md:text-[250px] font-bold text-white/10 select-none tracking-wider animate-pulse">
+        <div className="text-[100px] md:text-[250px] font-bold text-white/10 select-none tracking-wider animate-pulse">
           {showCelebration ? "2025" : "2024"}
         </div>
       </div>
@@ -397,13 +396,13 @@ const NewYearCountdown: React.FC = () => {
         )}
       </button>
 
-      <div className="relative z-10 flex flex-col items-center space-y-12">
-        <h1 className="text-white text-4xl md:text-5xl font-bold tracking-wider mb-8 animate-text-glow">
+      <div className="relative z-10 flex flex-col items-center space-y-6 w-full">
+        <h1 className="text-white text-2xl md:text-4xl font-bold tracking-wider mb-4 animate-text-glow">
           New Year Countdown
         </h1>
 
         {!showCelebration ? (
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-center gap-4 w-full">
             <TimeUnit
               value={timeLeft.days}
               label="Days"
@@ -446,11 +445,11 @@ const NewYearCountdown: React.FC = () => {
             />
           </div>
         ) : (
-          <div className="text-center space-y-6 animate-celebration">
-            <h2 className="text-7xl md:text-8xl font-bold text-white animate-text-glow">
+          <div className="text-center space-y-4 animate-celebration">
+            <h2 className="text-4xl md:text-6xl font-bold text-white animate-text-glow">
               Happy 2025!
             </h2>
-            <PartyPopper className="w-20 h-20 text-yellow-400 mx-auto animate-bounce" />
+            <PartyPopper className="w-16 h-16 text-yellow-400 mx-auto animate-bounce" />
           </div>
         )}
       </div>
