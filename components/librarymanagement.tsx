@@ -35,11 +35,13 @@ import Link from "next/link";
 interface Book {
   id: number;
   title: string;
-  author: string;
+  sources: string;
   class: string;
   genre: string;
   totalCopies: number;
   availableCopies: number;
+  donated: boolean;
+  bought: boolean;
 }
 
 interface User {
@@ -70,7 +72,7 @@ interface SearchState {
   sortBy:
     | "id"
     | "title"
-    | "author"
+    | "sources"
     | "class"
     | "genre"
     | "totalCopies"
@@ -329,7 +331,7 @@ const LibraryManagementSystem: React.FC = () => {
   // Search Helpers
   const fuseOptions = {
     includeScore: true,
-    keys: ["title", "author", "class", "genre"],
+    keys: ["title", "sources", "class", "genre"],
   };
 
   const fuseBooks = new Fuse(books, fuseOptions);
@@ -490,7 +492,7 @@ const LibraryManagementSystem: React.FC = () => {
     };
     setRentals([...rentals, newRental]);
 
-    // Update the book's available copes
+    // Update the book's available copies
     setBooks(
       books.map((book) =>
         book.id === bookId
@@ -524,7 +526,7 @@ const LibraryManagementSystem: React.FC = () => {
   const deleteRental = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copes
+      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -586,11 +588,11 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Return Book Funcion
+  // Return Book Function
   const returnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copes
+      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -626,7 +628,7 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Add notificaton
+      // Add notification
       toast.success(
         `Book "${
           books.find((book) => book.id === rental.bookId)?.title
@@ -639,11 +641,11 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Undo Return Book Funcion
+  // Undo Return Book Function
   const undoReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copes
+      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -677,11 +679,11 @@ const LibraryManagementSystem: React.FC = () => {
     }
   };
 
-  // Confirm Return Book Funcion
+  // Confirm Return Book Function
   const confirmReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copes
+      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -742,7 +744,7 @@ const LibraryManagementSystem: React.FC = () => {
     await tx.oncomplete;
   };
 
-  // Create Backup Funcion
+  // Create Backup Function
   const createBackup = () => {
     try {
       const currentDate = new Date();
@@ -816,7 +818,7 @@ const LibraryManagementSystem: React.FC = () => {
             sortBy: e.target.value as
               | "id"
               | "title"
-              | "author"
+              | "sources"
               | "class"
               | "genre"
               | "totalCopies"
@@ -827,7 +829,7 @@ const LibraryManagementSystem: React.FC = () => {
       >
         <option value="id">Sort by ID</option>
         <option value="title">Sort by Title</option>
-        <option value="author">Sort by Author</option>
+        <option value="sources">Sort by Sources</option>
         <option value="class">Sort by Class</option>
         <option value="genre">Sort by Genre</option>
         <option value="totalCopies">Sort by Total Copies</option>
@@ -1026,19 +1028,24 @@ const LibraryManagementSystem: React.FC = () => {
               }
               required
             />
-            <input
-              type="text"
-              placeholder="Author"
+            <select
               className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
-              value={currentBook?.author || ""}
+              value={currentBook?.sources || ""}
               onChange={(e) =>
                 setCurrentBook({
                   ...currentBook!,
-                  author: e.target.value,
+                  sources: e.target.value,
                 })
               }
               required
-            />
+            >
+              <option value="" disabled>
+                Select Source
+              </option>
+              <option value="Donated">Donated</option>
+              <option value="Bought">Bought</option>
+            </select>
+
             <input
               type="text"
               placeholder="Class"
@@ -1624,6 +1631,7 @@ const LibraryManagementSystem: React.FC = () => {
             >
               Login
             </button>
+            <Link href="/books">Bul;k add</Link>
             <Footer />
           </div>
         ) : (
@@ -1707,11 +1715,13 @@ const LibraryManagementSystem: React.FC = () => {
                   setCurrentBook({
                     id: 0,
                     title: "",
-                    author: "",
+                    sources: "",
                     class: "",
                     genre: "",
                     totalCopies: 0,
                     availableCopies: 0,
+                    donated: false,
+                    bought: false,
                   });
                   setIsBookModalOpen(true);
                 }}
@@ -1724,11 +1734,13 @@ const LibraryManagementSystem: React.FC = () => {
                   <tr className="bg-gray-700">
                     <th className="p-3 border text-white">ID</th>
                     <th className="p-3 border text-white">Title</th>
-                    <th className="p-3 border text-white">Author</th>
+                    <th className="p-3 border text-white">Sources</th>
                     <th className="p-3 border text-white">Class</th>
                     <th className="p-3 border text-white">Genre</th>
                     <th className="p-3 border text-white">Total Copies</th>
                     <th className="p-3 border text-white">Available</th>
+                    <th className="p-3 border text-white">Donated</th>
+                    <th className="p-3 border text-white">Bought</th>
                     <th className="p-3 border text-white">Actions</th>
                   </tr>
                 </thead>
@@ -1737,7 +1749,7 @@ const LibraryManagementSystem: React.FC = () => {
                     <tr key={book.id} className="hover:bg-gray-600">
                       <td className="p-3 border text-white">{book.id}</td>
                       <td className="p-3 border text-white">{book.title}</td>
-                      <td className="p-3 border text-white">{book.author}</td>
+                      <td className="p-3 border text-white">{book.sources}</td>
                       <td className="p-3 border text-white">{book.class}</td>
                       <td className="p-3 border text-white">{book.genre}</td>
                       <td className="p-3 border text-center text-white">
@@ -1745,6 +1757,12 @@ const LibraryManagementSystem: React.FC = () => {
                       </td>
                       <td className="p-3 border text-center text-white">
                         {book.availableCopies}
+                      </td>
+                      <td className="p-3 border text-center text-white">
+                        {book.donated ? "Yes" : "No"}
+                      </td>
+                      <td className="p-3 border text-center text-white">
+                        {book.bought ? "Yes" : "No"}
                       </td>
                       <td className="p-3 border text-center">
                         <button
@@ -2009,7 +2027,7 @@ const LibraryManagementSystem: React.FC = () => {
                           {book.title}
                         </p>
                         <p className="text-gray-300">
-                          {book.author} •{" "}
+                          {book.sources} •{" "}
                           <span className="text-green-400">
                             {book.availableCopies} available
                           </span>
@@ -2106,7 +2124,7 @@ const LibraryManagementSystem: React.FC = () => {
               sortBy: e.target.value as
                 | "id"
                 | "title"
-                | "author"
+                | "sources"
                 | "class"
                 | "genre"
                 | "totalCopies"
@@ -2117,7 +2135,7 @@ const LibraryManagementSystem: React.FC = () => {
         >
           <option value="id">Sort by ID</option>
           <option value="title">Sort by Title</option>
-          <option value="author">Sort by Author</option>
+          <option value="sources">Sort by Sources</option>
           <option value="class">Sort by Class</option>
           <option value="genre">Sort by Genre</option>
           <option value="totalCopies">Sort by Total Copies</option>
@@ -2693,7 +2711,7 @@ const LibraryManagementSystem: React.FC = () => {
           </button>
         </div>
 
-        {/* Reset DB Button */}
+        {/* Reset Database */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-md">
           <h3 className="text-2xl font-semibold mb-4 text-white">
             Reset Database
@@ -2710,12 +2728,12 @@ const LibraryManagementSystem: React.FC = () => {
           </button>
         </div>
 
-        {/* //bulk book */}
+        {/* Bulk Book Addition */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-md">
           <h3 className="text-2xl font-semibold mb-4 text-white">
             Bulk Book Addition
           </h3>
-          <p className="mb-4 text-white">Add books on bulk with easy layout</p>
+          <p className="mb-4 text-white">Add books in bulk with easy layout</p>
           <Link href="/books">
             <button className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
               Add Books
@@ -2771,11 +2789,11 @@ const LibraryManagementSystem: React.FC = () => {
   // Reset Database
   const resetDatabase = () => {
     const adminPassword = "admin123"; // Define the required password
-  
+
     const userInput = window.prompt(
       "Enter the admin password to reset the database:"
     );
-  
+
     if (userInput === adminPassword) {
       if (
         window.confirm(
@@ -2792,7 +2810,7 @@ const LibraryManagementSystem: React.FC = () => {
       toast.error("Incorrect password. Database reset canceled.");
     }
   };
-  
+
   // Render Reset Database Modal
   const [isResetDatabaseModalOpen, setIsResetDatabaseModalOpen] =
     useState(false);
@@ -2955,11 +2973,13 @@ const LibraryManagementSystem: React.FC = () => {
                 setCurrentBook({
                   id: 0,
                   title: "",
-                  author: "",
+                  sources: "",
                   class: "",
                   genre: "",
                   totalCopies: 0,
                   availableCopies: 0,
+                  donated: false,
+                  bought: false,
                 });
                 setIsBookModalOpen(true);
               }}
@@ -2976,11 +2996,13 @@ const LibraryManagementSystem: React.FC = () => {
               <tr className="bg-gray-700">
                 <th className="p-3 border text-white">ID</th>
                 <th className="p-3 border text-white">Title</th>
-                <th className="p-3 border text-white">Author</th>
+                <th className="p-3 border text-white">Sources</th>
                 <th className="p-3 border text-white">Class</th>
                 <th className="p-3 border text-white">Genre</th>
                 <th className="p-3 border text-white">Total Copies</th>
                 <th className="p-3 border text-white">Available</th>
+                {/* <th className="p-3 border text-white">Donated</th>
+                <th className="p-3 border text-white">Bought</th> */}
                 <th className="p-3 border text-white">Actions</th>
               </tr>
             </thead>
@@ -2989,7 +3011,7 @@ const LibraryManagementSystem: React.FC = () => {
                 <tr key={book.id} className="hover:bg-gray-600">
                   <td className="p-3 border text-white">{book.id}</td>
                   <td className="p-3 border text-white">{book.title}</td>
-                  <td className="p-3 border text-white">{book.author}</td>
+                  <td className="p-3 border text-white">{book.sources}</td>
                   <td className="p-3 border text-white">{book.class}</td>
                   <td className="p-3 border text-white">{book.genre}</td>
                   <td className="p-3 border text-center text-white">
@@ -2998,6 +3020,12 @@ const LibraryManagementSystem: React.FC = () => {
                   <td className="p-3 border text-center text-white">
                     {book.availableCopies}
                   </td>
+                  {/* <  td className="p-3 border text-center text-white">
+                    {book.donated ? "Yes" : "No"}
+                  </>
+                  <td className="p-3 border text-center text-white">
+                    {book.bought ? "Yes" : "No"}
+                  </td> */}
                   <td className="p-3 border text-center">
                     <button
                       onClick={() => {

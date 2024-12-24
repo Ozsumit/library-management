@@ -12,8 +12,12 @@ interface Book {
   availableCopies: number;
 }
 
-const BulkBookAddition: React.FC = () => {
-  const [books, setBooks] = useState<Book[]>([]);
+interface BulkBookAdditionProps {
+  books: Book[];
+  onAddBooks: (newBooks: Book[]) => void;
+}
+
+const BulkBookAddition = ({ books, onAddBooks }: BulkBookAdditionProps) => {
   const [newBooks, setNewBooks] = useState<Book[]>([
     {
       id: 0,
@@ -74,11 +78,30 @@ const BulkBookAddition: React.FC = () => {
   };
 
   const addBooks = () => {
-    const updatedBooks = newBooks.map((book, index) => ({
+    // Filter out empty rows
+    const validBooks = newBooks.filter(
+      (book) =>
+        book.title ||
+        book.author ||
+        book.class ||
+        book.genre ||
+        book.totalCopies > 0 ||
+        book.availableCopies > 0
+    );
+
+    // Get the next available ID
+    const nextId =
+      books.length > 0 ? Math.max(...books.map((book) => book.id)) + 1 : 1;
+
+    const updatedBooks = validBooks.map((book, index) => ({
       ...book,
-      id: books.length + index + 1,
+      id: nextId + index,
     }));
-    setBooks([...books, ...updatedBooks]);
+
+    // Call parent's onAddBooks function
+    onAddBooks(updatedBooks);
+
+    // Clear the form
     setNewBooks([
       {
         id: 0,
@@ -93,12 +116,38 @@ const BulkBookAddition: React.FC = () => {
   };
 
   const exportBooks = () => {
-    if (books.length === 0) {
-      addBooks();
+    // Filter out empty rows from newBooks
+    const validNewBooks = newBooks.filter(
+      (book) =>
+        book.title ||
+        book.author ||
+        book.class ||
+        book.genre ||
+        book.totalCopies > 0 ||
+        book.availableCopies > 0
+    );
+
+    // Get the next available ID
+    const nextId =
+      books.length > 0 ? Math.max(...books.map((book) => book.id)) + 1 : 1;
+
+    // Combine existing books with valid new books
+    const booksToExport = [
+      ...books,
+      ...validNewBooks.map((book, index) => ({
+        ...book,
+        id: nextId + index,
+      })),
+    ];
+
+    // Only export if there are books to export
+    if (booksToExport.length > 0) {
+      const jsonString = JSON.stringify(booksToExport, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      saveAs(blob, "books.json");
+    } else {
+      alert("No books to export. Please add some books first.");
     }
-    const jsonString = JSON.stringify(books, null, 2);
-    const blob = new Blob([jsonString], { type: "application/json" });
-    saveAs(blob, "books.json");
   };
 
   return (
