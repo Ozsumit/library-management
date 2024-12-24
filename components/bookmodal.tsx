@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import { saveAs } from "file-saver";
-import { Plus, Edit3, Trash2 } from "lucide-react";
 
 interface Book {
   id: number;
@@ -94,6 +93,9 @@ const BulkBookAddition: React.FC = () => {
   };
 
   const exportBooks = () => {
+    if (books.length === 0) {
+      addBooks();
+    }
     const jsonString = JSON.stringify(books, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     saveAs(blob, "books.json");
