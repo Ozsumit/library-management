@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Dashboard from "./search"; // Import the Dashboard component
 import JsonToPdfConverter from "./Table";
 import LibraryCardSystem from "./confirmdialog";
 import {
@@ -31,7 +32,7 @@ import { saveAs } from "file-saver";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
 import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+// import "react-toastify/dist/React-Toastify.css";
 import Footer from "./footer";
 import Link from "next/link";
 
@@ -263,7 +264,7 @@ const LibraryManagementSystem: React.FC = () => {
       case "all":
       default:
         data = { books, users, rentals };
-        filename = `backup-${new Date()
+        filename = `backup-\${new Date()
           .toLocaleString()
           .replace(/[/: ]/g, "-")}.json`;
         break;
@@ -333,6 +334,7 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Enhanced Search Helpers
+  // Enhanced Search Helpers
   const fuseOptions = {
     includeScore: true,
     keys: ["title", "sources", "class", "genre"],
@@ -354,6 +356,7 @@ const LibraryManagementSystem: React.FC = () => {
       "customReturnDate",
     ],
   });
+
   const searchBooks = (books: Book[]): Book[] => {
     if (!bookSearch.query) return books;
     const result = fuseBooks.search(bookSearch.query);
@@ -416,7 +419,6 @@ const LibraryManagementSystem: React.FC = () => {
     result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
     return result.map((item) => item.item);
   };
-
   // Book Management Functions
   const addBook = (book: Book) => {
     const newBook = { ...book, id: generateNumericId(books) };
@@ -440,10 +442,27 @@ const LibraryManagementSystem: React.FC = () => {
 
   const confirmDeleteBook = () => {
     if (selectedBook) {
-      setBooks(books.filter((book) => book.id !== selectedBook.id));
-      setIsDeleteBookModalOpen(false);
-      setSelectedBook(null);
-      createBackup();
+      // Ensure the selected book exists in the current books list
+      const bookExists = books.some((book) => book.id === selectedBook.id);
+
+      if (bookExists && selectedBook.id === parseInt(verificationUserId)) {
+        // Proceed with deletion
+        setBooks(books.filter((book) => book.id !== selectedBook.id));
+        setIsDeleteBookModalOpen(false);
+        setSelectedBook(null);
+        createBackup();
+        console.log(`Book with ID: ${selectedBook.id} deleted.`);
+      } else {
+        // Alert if the book does not exist or the ID is incorrect
+        toast.error("Selected book does not exist or the ID is incorrect.");
+        console.log(
+          "Delete operation aborted: Book not found or incorrect ID."
+        );
+      }
+    } else {
+      // Handle case where no book is selected
+      toast.error("No book selected for deletion.");
+      console.log("Delete operation aborted: No book selected.");
     }
   };
 
@@ -473,11 +492,13 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   const confirmDeleteUser = () => {
-    if (selectedUser) {
+    if (selectedUser && selectedUser.id === parseInt(verificationUserId)) {
       setUsers(users.filter((user) => user.id !== selectedUser.id));
       setIsDeleteUserModalOpen(false);
       setSelectedUser(null);
       createBackup();
+    } else {
+      toast.error("Verification failed. Please enter the correct user ID.");
     }
   };
 
@@ -642,9 +663,9 @@ const LibraryManagementSystem: React.FC = () => {
 
       // Add notification
       toast.success(
-        `Book "${
+        `Book "\${
           books.find((book) => book.id === rental.bookId)?.title
-        }" returned by user "${
+        }" returned by user "\${
           users.find((user) => user.id === rental.userId)?.name
         }".`
       );
@@ -944,7 +965,7 @@ const LibraryManagementSystem: React.FC = () => {
       </label>
     </div>
   );
-
+  // Render Rental User Search
   // Render Rental User Search
   const renderRentalUserSearch = () => (
     <div className="flex flex-col md:flex-row items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
@@ -991,17 +1012,16 @@ const LibraryManagementSystem: React.FC = () => {
         <option value="class">Sort by Class</option>
         <option value="membershipDate">Sort by Membership Date</option>
       </select>
-      {/* <button
+      <button
         onClick={() =>
           setRentalUserSearch({ type: "id", query: "", sortBy: "id" })
         }
         className="bg-gray-700 text-white p-2 rounded-md w-full md:w-auto hover:bg-gray-600"
       >
         Clear
-      </button> */}
+      </button>
     </div>
   );
-
   // Render Book Modal
   const renderBookModal = () => {
     if (!isBookModalOpen) return null;
@@ -2282,9 +2302,20 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Render Tools Tab
   const renderToolsTab = () => (
-    <div className="bg-gray-900 p-6 mr-2 rounded-lg">
-      <h2 className="text-3xl font-bold mb-6 text-white">Tools</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="bg-gray-900 p-6  rounded-lg">
+      <Dashboard
+        users={users.length}
+        books={books.length}
+        donatedBooks={books.filter((book) => book.donated).length}
+        boughtBooks={books.filter((book) => book.bought).length}
+        totalCopies={books.reduce((total, book) => total + book.totalCopies, 0)}
+        availableCopies={books.reduce(
+          (total, book) => total + book.availableCopies,
+          0
+        )}
+      />
+      <h2 className="text-3xl  font-bold mb-6 text-white">Tools</h2>
+      <div className="grid grid-cols-1 mr-8 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* ID Card Generator */}
         {/* <div className="bg-gray-800 p-6 rounded-lg shadow-md">
           <h3 className="text-2xl font-semibold mb-4 text-white">
@@ -2363,6 +2394,7 @@ const LibraryManagementSystem: React.FC = () => {
           </Link>
         </div>
       </div>
+
       <JsonToPdfConverter />
       <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="col-span-1 md:col-span-2 lg:col-span-3">
@@ -2390,7 +2422,7 @@ const LibraryManagementSystem: React.FC = () => {
               >
                 Login
               </button>
-              <Link href="/books">Bulk add</Link>
+              {/* <Link href="/books">Bulk add</Link> */}
               <Footer />
             </div>
           ) : (
@@ -2731,7 +2763,7 @@ const LibraryManagementSystem: React.FC = () => {
                   onChange={(e) => {
                     setSecondaryButtonColor(e.target.value);
                     document.documentElement.style.setProperty(
-                      "--seconday-button-color",
+                      "--secondary-button-color",
                       e.target.value
                     );
                   }}

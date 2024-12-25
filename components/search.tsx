@@ -1,73 +1,107 @@
-// // components/Countdown.js
-// import { useEffect, useState } from "react";
-// import { motion } from "framer-motion";
-// import styles from "../styles/Countdown.module.css";
+import React from "react";
 
-// const Countdown = () => {
-//   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+interface DashboardProps {
+  users: number;
+  books: number;
+  donatedBooks: number;
+  boughtBooks: number;
+  totalCopies: number;
+  availableCopies: number;
+  // rentedBooks: number; // Add rentedBooks prop
+}
 
-//   useEffect(() => {
-//     const timer = setTimeout(() => {
-//       setTimeLeft(calculateTimeLeft());
-//     }, 1000);
+interface StatCardProps {
+  title: string;
+  value: number;
+  color: string;
+  description: string;
+}
 
-//     return () => clearTimeout(timer);
-//   });
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  color,
+  description,
+}) => (
+  <div
+    className={`bg-gray-800 rounded-lg p-4 shadow-md border-l-4 ${color} hover:bg-gray-700 transition-colors`}
+  >
+    <h3 className="text-gray-300 text-sm font-semibold">{title}</h3>
+    <p className="text-2xl font-bold mt-2 text-white">
+      {value.toLocaleString()}
+    </p>
+    <p className="text-xs text-gray-400 mt-1">{description}</p>
+  </div>
+);
 
-//   const calculateTimeLeft = () => {
-//     const difference = +new Date("2025-01-01T00:00:00") - +new Date();
-//     let timeLeft = {};
+const Dashboard: React.FC<DashboardProps> = ({
+  users,
+  books,
+  donatedBooks,
+  boughtBooks,
+  totalCopies,
+  availableCopies,
+}) => {
+  var rentedbooks = totalCopies - availableCopies;
+  const stats = [
+    {
+      title: "Total Users",
+      value: users,
+      color: "border-blue-400",
+      description: "Active library members",
+    },
+    {
+      title: "Total Books",
+      value: books,
+      color: "border-green-400",
+      description: "Unique book titles",
+    },
+    {
+      title: "Donated Books",
+      value: donatedBooks,
+      color: "border-purple-400",
+      description: `${((donatedBooks / books) * 100).toFixed(
+        1
+      )}% of collection`,
+    },
+    {
+      title: "Purchased Books",
+      value: boughtBooks,
+      color: "border-yellow-400",
+      description: `${((boughtBooks / books) * 100).toFixed(1)}% of collection`,
+    },
+    {
+      title: "Total Copies",
+      value: totalCopies,
+      color: "border-red-400",
+      description: `${(totalCopies / books).toFixed(1)} copies per title`,
+    },
+    {
+      title: "Available Copies",
+      value: availableCopies,
+      color: "border-emerald-400",
+      description: `${((availableCopies / totalCopies) * 100).toFixed(
+        1
+      )}% in stock`,
+    },
+    {
+      title: "Books Rented",
+      value: rentedbooks,
+      color: "border-emerald-400",
+      description: `${((rentedbooks / totalCopies) * 100).toFixed(1)}% rented`,
+    },
+  ];
 
-//     if (difference > 0) {
-//       timeLeft = {
-//         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-//         hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-//         minutes: Math.floor((difference / 1000 / 60) % 60),
-//         seconds: Math.floor((difference / 1000) % 60),
-//       };
-//     }
+  return (
+    <div className="p-6 bg-gray-900">
+      <h2 className="text-2xl font-bold text-white mb-6">Library Overview</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.map((stat) => (
+          <StatCard key={stat.title} {...stat} />
+        ))}
+      </div>
+    </div>
+  );
+};
 
-//     return timeLeft;
-//   };
-
-//   const { days, hours, minutes, seconds } = timeLeft;
-
-//   return (
-//     <div className={styles.countdown}>
-//       <motion.div
-//         className={styles.time}
-//         initial={{ opacity: 0, y: -50 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 1 }}
-//       >
-//         <span>{days}</span> Days
-//       </motion.div>
-//       <motion.div
-//         className={styles.time}
-//         initial={{ opacity: 0, y: -50 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 1 }}
-//       >
-//         <span>{hours}</span> Hours
-//       </motion.div>
-//       <motion.div
-//         className={styles.time}
-//         initial={{ opacity: 0, y: -50 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 1 }}
-//       >
-//         <span>{minutes}</span> Minutes
-//       </motion.div>
-//       <motion.div
-//         className={styles.time}
-//         initial={{ opacity: 0, y: -50 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 1 }}
-//       >
-//         <span>{seconds}</span> Seconds
-//       </motion.div>
-//     </div>
-//   );
-// };
-
-// export default Countdown;
+export default Dashboard;
