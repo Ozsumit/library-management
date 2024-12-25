@@ -1,5 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import JsonToPdfConverter from "./Table";
+import LibraryCardSystem from "./confirmdialog";
 import {
   BookOpen,
   Users,
@@ -7,6 +9,8 @@ import {
   Download,
   Upload,
   Clock,
+  AlertCircle,
+  History,
   Search,
   Trash,
   Edit,
@@ -96,7 +100,7 @@ const LibraryManagementSystem: React.FC = () => {
     | "unreturned"
     | "backup"
     | "returned"
-    | "admin"
+    | "Profiles"
     | "tools"
   >("books");
 
@@ -1613,399 +1617,9 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Render Admin Panel
   const renderAdminPanel = () => (
-    <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div className="col-span-1 md:col-span-2 lg:col-span-3">
-        <h2 className="text-3xl font-bold mb-6 text-white">Admin Panel</h2>
-        {!isAdminAuthenticated ? (
-          <div>
-            <input
-              type="password"
-              placeholder="Enter Admin Password"
-              className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4"
-              onClick={() => {
-                if (adminPassword === "admin123") {
-                  setIsAdminAuthenticated(true);
-                } else {
-                  toast.error("Incorrect password. Please try again.");
-                }
-              }}
-            >
-              Login
-            </button>
-            <Link href="/books">Bulk add</Link>
-            <Footer />
-          </div>
-        ) : (
-          <div>
-            <button
-              type="button"
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4"
-              onClick={() => setIsAdminAuthenticated(false)}
-            >
-              Logout
-            </button>
-            <h3 className="text-2xl font-semibold mb-4 text-white">
-              Manage Users
-            </h3>
-            <div className="mb-4">
-              <button
-                onClick={() => {
-                  setCurrentUser({
-                    id: 0,
-                    name: "",
-                    email: "",
-                    membershipDate: new Date().toISOString(),
-                    currentRentals: [],
-                    class: "",
-                  });
-                  setIsUserModalOpen(true);
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
-              >
-                <Plus className="mr-2" /> Add User
-              </button>
-              <table className="w-full border rounded-xl shadow-md bg-gray-800">
-                <thead>
-                  <tr className="bg-gray-700">
-                    <th className="p-3 border text-white">ID</th>
-                    <th className="p-3 border text-white">Name</th>
-                    <th className="p-3 border text-white">Email</th>
-                    <th className="p-3 border text-white">Class</th>
-                    <th className="p-3 border text-white">Membership Date</th>
-                    <th className="p-3 border text-white">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {searchUsers(users).map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-600">
-                      <td className="p-3 border text-white">{user.id}</td>
-                      <td className="p-3 border text-white">{user.name}</td>
-                      <td className="p-3 border text-white">{user.email}</td>
-                      <td className="p-3 border text-white">{user.class}</td>
-                      <td className="p-3 border text-white">
-                        {new Date(user.membershipDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-3 border text-center">
-                        <button
-                          onClick={() => {
-                            setCurrentUser(user);
-                            setIsUserModalOpen(true);
-                          }}
-                          className="text-blue-500 mr-2 hover:text-blue-600"
-                        >
-                          <Edit className="mr-1" /> Edit
-                        </button>
-                        <button
-                          onClick={() => deleteUser(user.id)}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <Trash className="mr-1" /> Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <h3 className="text-2xl font-semibold mb-4 text-white">
-              Manage Books
-            </h3>
-            <div className="mb-4">
-              <button
-                onClick={() => {
-                  setCurrentBook({
-                    id: 0,
-                    title: "",
-                    sources: "",
-                    class: "",
-                    genre: "",
-                    totalCopies: 0,
-                    availableCopies: 0,
-                    donated: false,
-                    bought: false,
-                  });
-                  setIsBookModalOpen(true);
-                }}
-                className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
-              >
-                <Plus className="mr-2" /> Add Book
-              </button>
-              <table className="w-full border rounded-xl shadow-md bg-gray-800">
-                <thead>
-                  <tr className="bg-gray-700">
-                    <th className="p-3 border text-white">ID</th>
-                    <th className="p-3 border text-white">Title</th>
-                    <th className="p-3 border text-white">Sources</th>
-                    <th className="p-3 border text-white">Class</th>
-                    <th className="p-3 border text-white">Genre</th>
-                    <th className="p-3 border text-white">Total Copies</th>
-                    <th className="p-3 border text-white">Available</th>
-                    <th className="p-3 border text-white">Donated</th>
-                    <th className="p-3 border text-white">Bought</th>
-                    <th className="p-3 border text-white">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {searchBooks(books).map((book) => (
-                    <tr key={book.id} className="hover:bg-gray-600">
-                      <td className="p-3 border text-white">{book.id}</td>
-                      <td className="p-3 border text-white">{book.title}</td>
-                      <td className="p-3 border text-white">{book.sources}</td>
-                      <td className="p-3 border text-white">{book.class}</td>
-                      <td className="p-3 border text-white">{book.genre}</td>
-                      <td className="p-3 border text-center text-white">
-                        {book.totalCopies}
-                      </td>
-                      <td className="p-3 border text-center text-white">
-                        {book.availableCopies}
-                      </td>
-                      <td className="p-3 border text-center text-white">
-                        {book.donated ? "Yes" : "No"}
-                      </td>
-                      <td className="p-3 border text-center text-white">
-                        {book.bought ? "Yes" : "No"}
-                      </td>
-                      <td className="p-3 border text-center">
-                        <button
-                          onClick={() => {
-                            setCurrentBook(book);
-                            setIsBookModalOpen(true);
-                          }}
-                          className="text-blue-500 mr-2 hover:text-blue-600"
-                        >
-                          <Edit className="mr-1" /> Edit
-                        </button>
-                        <button
-                          onClick={() => deleteBook(book.id)}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <Trash className="mr-1" /> Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <h3 className="text-2xl font-semibold mb-4 text-white">
-              Manage Rentals
-            </h3>
-            <div className="mb-4">
-              <table className="w-full border rounded-xl shadow-md bg-gray-800">
-                <thead>
-                  <tr className="bg-gray-700">
-                    <th className="p-3 border text-white">ID</th>
-                    <th className="p-3 border text-white">Book ID</th>
-                    <th className="p-3 border text-white">User ID</th>
-                    <th className="p-3 border text-white">Rental Date</th>
-                    <th className="p-3 border text-white">Due Date</th>
-                    <th className="p-3 border text-white">Return Date</th>
-                    <th className="p-3 border text-white">
-                      Custom Return Date
-                    </th>
-                    <th className="p-3 border text-white">Return Time</th>
-                    <th className="p-3 border text-white">Status</th>
-                    <th className="p-3 border text-white">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rentals.map((rental) => (
-                    <tr key={rental.id} className="hover:bg-gray-600">
-                      <td className="p-3 border text-white">{rental.id}</td>
-                      <td className="p-3 border text-white">{rental.bookId}</td>
-                      <td className="p-3 border text-white">{rental.userId}</td>
-                      <td className="p-3 border text-white">
-                        {new Date(rental.rentalDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-3 border text-white">
-                        {new Date(rental.dueDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-3 border text-white">
-                        {rental.returnDate
-                          ? new Date(rental.returnDate).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      <td className="p-3 border text-white">
-                        {rental.customReturnDate
-                          ? new Date(
-                              rental.customReturnDate
-                            ).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      <td className="p-3 border text-white">
-                        {rental.returnTime || "N/A"}
-                      </td>
-                      <td className="p-3 border text-white">
-                        {rental.returnDate ? (
-                          new Date(rental.returnDate) <=
-                          new Date(rental.dueDate) ? (
-                            <span className="text-green-400">On Time</span>
-                          ) : (
-                            <span className="text-red-400">Late</span>
-                          )
-                        ) : (
-                          "Not Returned"
-                        )}
-                      </td>
-                      <td className="p-3 border text-center">
-                        <button
-                          onClick={() => {
-                            setSelectedRental(rental);
-                            setIsDeleteRentalModalOpen(true);
-                          }}
-                          className="text-red-500 hover:text-red-600"
-                        >
-                          <Trash className="mr-1" /> Delete
-                        </button>
-                        {!rental.returnDate && (
-                          <button
-                            onClick={() => {
-                              setSelectedRental(rental);
-                              setIsReturnBookModalOpen(true);
-                            }}
-                            className="text-blue-500 hover:text-blue-600 ml-2"
-                          >
-                            Return
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <h3 className="text-2xl font-semibold mb-4 text-white">
-              Customize UI
-            </h3>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-white">
-                Theme Color
-              </label>
-              <input
-                type="color"
-                className="w-full p-2 mb-3 rounded-md"
-                value={themeColor}
-                onChange={(e) => {
-                  setThemeColor(e.target.value);
-                  document.documentElement.style.setProperty(
-                    "--bg-color",
-                    e.target.value
-                  );
-                }}
-              />
-              <label className="block text-sm font-medium text-white">
-                Font Size
-              </label>
-              <input
-                type="range"
-                min="12"
-                max="24"
-                className="w-full p-2 mb-3 rounded-md"
-                value={fontSize}
-                onChange={(e) => {
-                  setFontSize(e.target.value);
-                  document.documentElement.style.setProperty(
-                    "--font-size",
-                    `${e.target.value}px`
-                  );
-                }}
-              />
-              <label className="block text-sm font-medium text-white">
-                Button Radius
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="50"
-                className="w-full p-2 mb-3 rounded-md"
-                value={buttonRadius}
-                onChange={(e) => {
-                  setButtonRadius(e.target.value);
-                  document.documentElement.style.setProperty(
-                    "--border-radius",
-                    `${e.target.value}px`
-                  );
-                }}
-              />
-              <label className="block text-sm font-medium text-white">
-                Font Family
-              </label>
-              <input
-                type="text"
-                className="w-full p-2 mb-3 rounded-md bg-gray-700 text-white"
-                value={fontFamily}
-                onChange={(e) => {
-                  setFontFamily(e.target.value);
-                  document.documentElement.style.setProperty(
-                    "--font-family",
-                    e.target.value
-                  );
-                }}
-              />
-              <label className="block text-sm font-medium text-white">
-                Primary Button Color
-              </label>
-              <input
-                type="color"
-                className="w-full p-2 mb-3 rounded-md"
-                value={primaryButtonColor}
-                onChange={(e) => {
-                  setPrimaryButtonColor(e.target.value);
-                  document.documentElement.style.setProperty(
-                    "--primary-button-color",
-                    e.target.value
-                  );
-                }}
-              />
-              <label className="block text-sm font-medium text-white">
-                Secondary Button Color
-              </label>
-              <input
-                type="color"
-                className="w-full p-2 mb-3 rounded-md"
-                value={secondaryButtonColor}
-                onChange={(e) => {
-                  setSecondaryButtonColor(e.target.value);
-                  document.documentElement.style.setProperty(
-                    "--secondary-button-color",
-                    e.target.value
-                  );
-                }}
-              />
-              <label className="block text-sm font-medium text-white">
-                Background Image
-              </label>
-              <input
-                type="file"
-                accept="image/*"
-                className="w-full p-2 mb-3 rounded-md bg-gray-700 text-white"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                      setBackgroundImage(event.target?.result as string);
-                      document.documentElement.style.setProperty(
-                        "--bg-image",
-                        `url(${event.target?.result})`
-                      );
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+    <LibraryCardSystem
+      users={users.map((user) => ({ ...user, phone: user.phone || "" }))}
+    />
   );
 
   // Render Rentals Tab
@@ -2668,11 +2282,11 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Render Tools Tab
   const renderToolsTab = () => (
-    <div className="bg-gray-900 p-6 rounded-lg">
+    <div className="bg-gray-900 p-6 mr-2 rounded-lg">
       <h2 className="text-3xl font-bold mb-6 text-white">Tools</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* ID Card Generator */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+        {/* <div className="bg-gray-800 p-6 rounded-lg shadow-md">
           <h3 className="text-2xl font-semibold mb-4 text-white">
             ID Card Generator
           </h3>
@@ -2717,7 +2331,7 @@ const LibraryManagementSystem: React.FC = () => {
           >
             Generate ID Card
           </button>
-        </div>
+        </div> */}
 
         {/* Reset Database */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-md">
@@ -2747,6 +2361,406 @@ const LibraryManagementSystem: React.FC = () => {
               Add Books
             </button>
           </Link>
+        </div>
+      </div>
+      <JsonToPdfConverter />
+      <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="col-span-1 md:col-span-2 lg:col-span-3">
+          <h2 className="text-3xl font-bold mb-6 text-white">Admin Panel</h2>
+          {!isAdminAuthenticated ? (
+            <div>
+              <input
+                type="password"
+                placeholder="Enter Admin Password"
+                className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4"
+                onClick={() => {
+                  if (adminPassword === "admin123") {
+                    setIsAdminAuthenticated(true);
+                  } else {
+                    toast.error("Incorrect password. Please try again.");
+                  }
+                }}
+              >
+                Login
+              </button>
+              <Link href="/books">Bulk add</Link>
+              <Footer />
+            </div>
+          ) : (
+            <div>
+              <button
+                type="button"
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4"
+                onClick={() => setIsAdminAuthenticated(false)}
+              >
+                Logout
+              </button>
+              <h3 className="text-2xl font-semibold mb-4 text-white">
+                Manage Users
+              </h3>
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    setCurrentUser({
+                      id: 0,
+                      name: "",
+                      email: "",
+                      membershipDate: new Date().toISOString(),
+                      currentRentals: [],
+                      class: "",
+                    });
+                    setIsUserModalOpen(true);
+                  }}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
+                >
+                  <Plus className="mr-2" /> Add User
+                </button>
+                <table className="w-full border rounded-xl shadow-md bg-gray-800">
+                  <thead>
+                    <tr className="bg-gray-700">
+                      <th className="p-3 border text-white">ID</th>
+                      <th className="p-3 border text-white">Name</th>
+                      <th className="p-3 border text-white">Email</th>
+                      <th className="p-3 border text-white">Class</th>
+                      <th className="p-3 border text-white">Membership Date</th>
+                      <th className="p-3 border text-white">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {searchUsers(users).map((user) => (
+                      <tr key={user.id} className="hover:bg-gray-600">
+                        <td className="p-3 border text-white">{user.id}</td>
+                        <td className="p-3 border text-white">{user.name}</td>
+                        <td className="p-3 border text-white">{user.email}</td>
+                        <td className="p-3 border text-white">{user.class}</td>
+                        <td className="p-3 border text-white">
+                          {new Date(user.membershipDate).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 border text-center">
+                          <button
+                            onClick={() => {
+                              setCurrentUser(user);
+                              setIsUserModalOpen(true);
+                            }}
+                            className="text-blue-500 mr-2 hover:text-blue-600"
+                          >
+                            <Edit className="mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => deleteUser(user.id)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash className="mr-1" /> Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">
+                Manage Books
+              </h3>
+              <div className="mb-4">
+                <button
+                  onClick={() => {
+                    setCurrentBook({
+                      id: 0,
+                      title: "",
+                      sources: "",
+                      class: "",
+                      genre: "",
+                      totalCopies: 0,
+                      availableCopies: 0,
+                      donated: false,
+                      bought: false,
+                    });
+                    setIsBookModalOpen(true);
+                  }}
+                  className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mb-2"
+                >
+                  <Plus className="mr-2" /> Add Book
+                </button>
+                <table className="w-full border rounded-xl shadow-md bg-gray-800">
+                  <thead>
+                    <tr className="bg-gray-700">
+                      <th className="p-3 border text-white">ID</th>
+                      <th className="p-3 border text-white">Title</th>
+                      <th className="p-3 border text-white">Sources</th>
+                      <th className="p-3 border text-white">Class</th>
+                      <th className="p-3 border text-white">Genre</th>
+                      <th className="p-3 border text-white">Total Copies</th>
+                      <th className="p-3 border text-white">Available</th>
+                      <th className="p-3 border text-white">Donated</th>
+                      <th className="p-3 border text-white">Bought</th>
+                      <th className="p-3 border text-white">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {searchBooks(books).map((book) => (
+                      <tr key={book.id} className="hover:bg-gray-600">
+                        <td className="p-3 border text-white">{book.id}</td>
+                        <td className="p-3 border text-white">{book.title}</td>
+                        <td className="p-3 border text-white">
+                          {book.sources}
+                        </td>
+                        <td className="p-3 border text-white">{book.class}</td>
+                        <td className="p-3 border text-white">{book.genre}</td>
+                        <td className="p-3 border text-center text-white">
+                          {book.totalCopies}
+                        </td>
+                        <td className="p-3 border text-center text-white">
+                          {book.availableCopies}
+                        </td>
+                        <td className="p-3 border text-center text-white">
+                          {book.donated ? "Yes" : "No"}
+                        </td>
+                        <td className="p-3 border text-center text-white">
+                          {book.bought ? "Yes" : "No"}
+                        </td>
+                        <td className="p-3 border text-center">
+                          <button
+                            onClick={() => {
+                              setCurrentBook(book);
+                              setIsBookModalOpen(true);
+                            }}
+                            className="text-blue-500 mr-2 hover:text-blue-600"
+                          >
+                            <Edit className="mr-1" /> Edit
+                          </button>
+                          <button
+                            onClick={() => deleteBook(book.id)}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash className="mr-1" /> Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">
+                Manage Rentals
+              </h3>
+              <div className="mb-4">
+                <table className="w-full border rounded-xl shadow-md bg-gray-800">
+                  <thead>
+                    <tr className="bg-gray-700">
+                      <th className="p-3 border text-white">ID</th>
+                      <th className="p-3 border text-white">Book ID</th>
+                      <th className="p-3 border text-white">User ID</th>
+                      <th className="p-3 border text-white">Rental Date</th>
+                      <th className="p-3 border text-white">Due Date</th>
+                      <th className="p-3 border text-white">Return Date</th>
+                      <th className="p-3 border text-white">
+                        Custom Return Date
+                      </th>
+                      <th className="p-3 border text-white">Return Time</th>
+                      <th className="p-3 border text-white">Status</th>
+                      <th className="p-3 border text-white">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rentals.map((rental) => (
+                      <tr key={rental.id} className="hover:bg-gray-600">
+                        <td className="p-3 border text-white">{rental.id}</td>
+                        <td className="p-3 border text-white">
+                          {rental.bookId}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {rental.userId}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {new Date(rental.rentalDate).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {new Date(rental.dueDate).toLocaleDateString()}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {rental.returnDate
+                            ? new Date(rental.returnDate).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {rental.customReturnDate
+                            ? new Date(
+                                rental.customReturnDate
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {rental.returnTime || "N/A"}
+                        </td>
+                        <td className="p-3 border text-white">
+                          {rental.returnDate ? (
+                            new Date(rental.returnDate) <=
+                            new Date(rental.dueDate) ? (
+                              <span className="text-green-400">On Time</span>
+                            ) : (
+                              <span className="text-red-400">Late</span>
+                            )
+                          ) : (
+                            "Not Returned"
+                          )}
+                        </td>
+                        <td className="p-3 border text-center">
+                          <button
+                            onClick={() => {
+                              setSelectedRental(rental);
+                              setIsDeleteRentalModalOpen(true);
+                            }}
+                            className="text-red-500 hover:text-red-600"
+                          >
+                            <Trash className="mr-1" /> Delete
+                          </button>
+                          {!rental.returnDate && (
+                            <button
+                              onClick={() => {
+                                setSelectedRental(rental);
+                                setIsReturnBookModalOpen(true);
+                              }}
+                              className="text-blue-500 hover:text-blue-600 ml-2"
+                            >
+                              Return
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <h3 className="text-2xl font-semibold mb-4 text-white">
+                Customize UI
+              </h3>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-white">
+                  Theme Color
+                </label>
+                <input
+                  type="color"
+                  className="w-full p-2 mb-3 rounded-md"
+                  value={themeColor}
+                  onChange={(e) => {
+                    setThemeColor(e.target.value);
+                    document.documentElement.style.setProperty(
+                      "--bg-color",
+                      e.target.value
+                    );
+                  }}
+                />
+                <label className="block text-sm font-medium text-white">
+                  Font Size
+                </label>
+                <input
+                  type="range"
+                  min="12"
+                  max="24"
+                  className="w-full p-2 mb-3 rounded-md"
+                  value={fontSize}
+                  onChange={(e) => {
+                    setFontSize(e.target.value);
+                    document.documentElement.style.setProperty(
+                      "--font-size",
+                      `${e.target.value}px`
+                    );
+                  }}
+                />
+                <label className="block text-sm font-medium text-white">
+                  Button Radius
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="50"
+                  className="w-full p-2 mb-3 rounded-md"
+                  value={buttonRadius}
+                  onChange={(e) => {
+                    setButtonRadius(e.target.value);
+                    document.documentElement.style.setProperty(
+                      "--border-radius",
+                      `${e.target.value}px`
+                    );
+                  }}
+                />
+                <label className="block text-sm font-medium text-white">
+                  Font Family
+                </label>
+                <input
+                  type="text"
+                  className="w-full p-2 mb-3 rounded-md bg-gray-700 text-white"
+                  value={fontFamily}
+                  onChange={(e) => {
+                    setFontFamily(e.target.value);
+                    document.documentElement.style.setProperty(
+                      "--font-family",
+                      e.target.value
+                    );
+                  }}
+                />
+                <label className="block text-sm font-medium text-white">
+                  Primary Button Color
+                </label>
+                <input
+                  type="color"
+                  className="w-full p-2 mb-3 rounded-md"
+                  value={primaryButtonColor}
+                  onChange={(e) => {
+                    setPrimaryButtonColor(e.target.value);
+                    document.documentElement.style.setProperty(
+                      "--primary-button-color",
+                      e.target.value
+                    );
+                  }}
+                />
+                <label className="block text-sm font-medium text-white">
+                  Secondary Button Color
+                </label>
+                <input
+                  type="color"
+                  className="w-full p-2 mb-3 rounded-md"
+                  value={secondaryButtonColor}
+                  onChange={(e) => {
+                    setSecondaryButtonColor(e.target.value);
+                    document.documentElement.style.setProperty(
+                      "--seconday-button-color",
+                      e.target.value
+                    );
+                  }}
+                />
+                <label className="block text-sm font-medium text-white">
+                  Background Image
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="w-full p-2 mb-3 rounded-md bg-gray-700 text-white"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        setBackgroundImage(event.target?.result as string);
+                        document.documentElement.style.setProperty(
+                          "--bg-image",
+                          `url(${event.target?.result})`
+                        );
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -2869,299 +2883,344 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 bg-gray-900 text-white">
-      <div className="flex mb-6 space-x-6">
-        <button
-          onClick={() => setActiveTab("books")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "books"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <BookOpen />
-          <span>Books</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "users"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <Users />
-          <span>Users</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("rentals")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "rentals"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <ShoppingCart />
-          <span>Rentals</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("rentalHistory")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "rentalHistory"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <ShoppingCart />
-          <span>Rental History</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("unreturned")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "unreturned"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <ShoppingCart />
-          <span>Unreturned Books</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("returned")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "returned"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <ShoppingCart />
-          <span>Returned Books</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("backup")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "backup"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <Clock />
-          <span>Backup</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("admin")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "admin"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <Lock />
-          <span>Admin</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("tools")}
-          className={`flex items-center space-x-2 p-3 rounded-xl ${
-            activeTab === "tools"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-700 text-gray-300"
-          }`}
-        >
-          <Settings />
-          <span>Tools</span>
-        </button>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+      {/* Navigation Tabs */}
+      <div className="sticky top-0 bg-gray-900/90 backdrop-blur-sm border-b border-gray-700 px-6 py-4 z-10">
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setActiveTab("books")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "books"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <BookOpen className="w-4 h-4 mr-2" />
+            <span>Books</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "users"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <Users className="w-4 h-4 mr-2" />
+            <span>Users</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("rentals")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "rentals"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            <span>Rentals</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("rentalHistory")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "rentalHistory"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <History className="w-4 h-4 mr-2" />
+            <span>Rental History</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("unreturned")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "unreturned"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <AlertCircle className="w-4 h-4 mr-2" />
+            <span>Unreturned Books</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("returned")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "returned"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            <span>Returned Books</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("backup")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "backup"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            <span>Backup</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("Profiles")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "Profiles"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <Lock className="w-4 h-4 mr-2" />
+            <span>Profiles</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("tools")}
+            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
+              activeTab === "tools"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+            }`}
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            <span>Tools</span>
+          </button>
+        </div>
       </div>
 
-      {activeTab === "books" && (
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold text-white">Books</h2>
-            <button
-              onClick={() => {
-                setCurrentBook({
-                  id: 0,
-                  title: "",
-                  sources: "",
-                  class: "",
-                  genre: "",
-                  totalCopies: 0,
-                  availableCopies: 0,
-                  donated: false,
-                  bought: false,
-                });
-                setIsBookModalOpen(true);
-              }}
-              className="bg-green-500 text-white px-4 py-4 flex flex-row justify-center items-center rounded-xl hover:bg-green-600"
-            >
-              <Plus className="mr-2" /> Add Book
-            </button>
+      <div className="p-6">
+        {activeTab === "books" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">Books</h2>
+              <button
+                onClick={() => {
+                  setCurrentBook({
+                    id: 0,
+                    title: "",
+                    sources: "",
+                    class: "",
+                    genre: "",
+                    totalCopies: 0,
+                    availableCopies: 0,
+                    donated: false,
+                    bought: false,
+                  });
+                  setIsBookModalOpen(true);
+                }}
+                className="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Add Book
+              </button>
+            </div>
+
+            {renderBookSearch()}
+
+            <div className="overflow-hidden rounded-lg  border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Sources
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Class
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Genre
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Total Copies
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Available
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {searchBooks(books).map((book) => (
+                    <tr
+                      key={book.id}
+                      className="hover:bg-gray-700/50 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {book.id}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {book.title}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {book.sources}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {book.class}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {book.genre}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300 text-center">
+                        {book.totalCopies}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300 text-center">
+                        {book.availableCopies}
+                      </td>
+                      <td className="px-6 py-4 text-sm space-x-2">
+                        <button
+                          onClick={() => {
+                            setCurrentBook(book);
+                            setIsBookModalOpen(true);
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                        >
+                          <Edit className="w-4 h-4 mr-1" /> Edit
+                        </button>
+                        <button
+                          onClick={() => deleteBook(book.id)}
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          <Trash className="w-4 h-4 mr-1" /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        )}
 
-          {renderBookSearch()}
+        {activeTab === "users" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-white">Users</h2>
+              <button
+                onClick={() => {
+                  setCurrentUser({
+                    id: 0,
+                    name: "",
+                    email: "",
+                    membershipDate: new Date().toISOString(),
+                    currentRentals: [],
+                    class: "",
+                  });
+                  setIsUserModalOpen(true);
+                }}
+                className="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Add User
+              </button>
+            </div>
 
-          <table className="w-full border rounded-xl shadow-md bg-gray-800">
-            <thead>
-              <tr className="bg-gray-700">
-                <th className="p-3 border text-white">ID</th>
-                <th className="p-3 border text-white">Title</th>
-                <th className="p-3 border text-white">Sources</th>
-                <th className="p-3 border text-white">Class</th>
-                <th className="p-3 border text-white">Genre</th>
-                <th className="p-3 border text-white">Total Copies</th>
-                <th className="p-3 border text-white">Available</th>
-                {/* <th className="p-3 border text-white">Donated</th>
-                <th className="p-3 border text-white">Bought</th> */}
-                <th className="p-3 border text-white">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {searchBooks(books).map((book) => (
-                <tr key={book.id} className="hover:bg-gray-600">
-                  <td className="p-3 border text-white">{book.id}</td>
-                  <td className="p-3 border text-white">{book.title}</td>
-                  <td className="p-3 border text-white">{book.sources}</td>
-                  <td className="p-3 border text-white">{book.class}</td>
-                  <td className="p-3 border text-white">{book.genre}</td>
-                  <td className="p-3 border text-center text-white">
-                    {book.totalCopies}
-                  </td>
-                  <td className="p-3 border text-center text-white">
-                    {book.availableCopies}
-                  </td>
-                  {/* <td className="p-3 border text-center text-white">
-                    {book.donated ? "Yes" : "No"}
-                  </td>
-                  <td className="p-3 border text-center text-white">
-                    {book.bought ? "Yes" : "No"}
-                  </td> */}
-                  <td className="p-3 border text-center">
-                    <button
-                      onClick={() => {
-                        setCurrentBook(book);
-                        setIsBookModalOpen(true);
-                      }}
-                      className="text-blue-500 mr-2 hover:text-blue-600"
+            {renderUserSearch()}
+
+            <div className="overflow-hidden rounded-lg  border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      ID
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Class
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Membership Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-300">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {searchUsers(users).map((user) => (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-gray-700/50 transition-colors"
                     >
-                      <Edit className="mr-1" /> Edit
-                    </button>
-                    <button
-                      onClick={() => deleteBook(book.id)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash className="mr-1" /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {activeTab === "users" && (
-        <div>
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold text-white">Users</h2>
-            <button
-              onClick={() => {
-                setCurrentUser({
-                  id: 0,
-                  name: "",
-                  email: "",
-                  membershipDate: new Date().toISOString(),
-                  currentRentals: [],
-                  class: "",
-                });
-                setIsUserModalOpen(true);
-              }}
-              className="bg-green-500 text-white px-4 py-4 flex flex-row justify-center items-center rounded-xl hover:bg-green-600"
-            >
-              <Plus className="mr-2" /> Add User
-            </button>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {user.id}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {user.name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {user.class}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-300">
+                        {new Date(user.membershipDate).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-sm space-x-2">
+                        <button
+                          onClick={() => {
+                            setCurrentUser(user);
+                            setIsUserModalOpen(true);
+                          }}
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                        >
+                          <Edit className="w-4 h-4 mr-1" /> Edit
+                        </button>
+                        <button
+                          onClick={() => deleteUser(user.id)}
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          <Trash className="w-4 h-4 mr-1" /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
+        )}
 
-          {renderUserSearch()}
+        {activeTab === "rentals" && renderRentalsTab()}
+        {activeTab === "rentalHistory" && renderRentalHistoryTab()}
+        {activeTab === "unreturned" && renderUnreturnedBooksTab()}
+        {activeTab === "returned" && renderReturnedBooksTab()}
+        {activeTab === "backup" && renderBackupTab()}
+        {activeTab === "Profiles" && renderAdminPanel()}
+        {activeTab === "tools" && renderToolsTab()}
 
-          <table className="w-full border rounded-xl shadow-md bg-gray-800">
-            <thead>
-              <tr className="bg-gray-700">
-                <th className="p-3 border text-white">ID</th>
-                <th className="p-3 border text-white">Name</th>
-                <th className="p-3 border text-white">Email</th>
-                <th className="p-3 border text-white">Class</th>
-                <th className="p-3 border text-white">Membership Date</th>
-                <th className="p-3 border text-white">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {searchUsers(users).map((user) => (
-                <tr key={user.id} className="hover:bg-gray-600">
-                  <td className="p-3 border text-white">{user.id}</td>
-                  <td className="p-3 border text-white">{user.name}</td>
-                  <td className="p-3 border text-white">{user.email}</td>
-                  <td className="p-3 border text-white">{user.class}</td>
-                  <td className="p-3 border text-white">
-                    {new Date(user.membershipDate).toLocaleDateString()}
-                  </td>
-                  <td className="p-3 border text-center">
-                    <button
-                      onClick={() => {
-                        setCurrentUser(user);
-                        setIsUserModalOpen(true);
-                      }}
-                      className="text-blue-500 mr-2 hover:text-blue-600"
-                    >
-                      <Edit className="mr-1" /> Edit
-                    </button>
-                    <button
-                      onClick={() => deleteUser(user.id)}
-                      className="text-red-500 hover:text-red-600"
-                    >
-                      <Trash className="mr-1" /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+        {renderBookModal()}
+        {renderUserModal()}
+        {renderRentalModal()}
+        {renderRentVerificationModal()}
+        {renderDeleteRentalModal()}
+        {renderViewRentalsModal()}
+        {renderDeleteBookModal()}
+        {renderReturnBookModal()}
+        {renderDeleteUserModal()}
 
-      {activeTab === "rentals" && renderRentalsTab()}
+        <ToastContainer position="bottom-right" autoClose={4000} />
 
-      {activeTab === "rentalHistory" && renderRentalHistoryTab()}
-
-      {activeTab === "unreturned" && renderUnreturnedBooksTab()}
-
-      {activeTab === "returned" && renderReturnedBooksTab()}
-
-      {activeTab === "backup" && renderBackupTab()}
-
-      {activeTab === "admin" && renderAdminPanel()}
-
-      {activeTab === "tools" && renderToolsTab()}
-
-      {renderBookModal()}
-      {renderUserModal()}
-      {renderRentalModal()}
-      {renderRentVerificationModal()}
-      {renderDeleteRentalModal()}
-      {renderViewRentalsModal()}
-      {renderDeleteBookModal()}
-      {renderReturnBookModal()}
-      {renderDeleteUserModal()}
-
-      {/* Notifications */}
-      <ToastContainer position="bottom-right" autoClose={3000} />
-
-      {/* Export All Button */}
-      <button
-        onClick={() => handleExport("all")}
-        className="fixed bottom-4 right-4 bg-blue-500 text-white px-4 py-4 flex flex-row justify-center items-center rounded-xl hover:bg-blue-600"
-        title="Export All"
-      >
-        <Download size={16} className="mr-1" /> Export All
-      </button>
+        <button
+          onClick={() => handleExport("all")}
+          className="fixed bottom-4 right-4 inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
+          title="Export All"
+        >
+          <Download className="w-4 h-4 mr-2" /> Export All
+        </button>
+      </div>
     </div>
   );
 };
