@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import Fuse from "fuse.js";
 import {
   Users,
   Search,
@@ -11,6 +12,24 @@ import {
   ChevronRight,
   UserX,
 } from "lucide-react";
+
+// Custom debounce hook
+const useDebounce = <T,>(value: T, delay: number): T => {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+  useEffect(() => {
+    // Increased delay for better typing experience
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
 
 interface LibraryUser {
   id: number;
@@ -28,27 +47,70 @@ interface LibraryCardSystemProps {
 
 const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState<LibraryUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<LibraryUser[]>(users);
   const [currentPage, setCurrentPage] = useState(1);
-  const usersPerPage = 6;
+  const [usersPerPage, setUsersPerPage] = useState(6);
+  const [sortKey, setSortKey] = useState<keyof LibraryUser>("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [isSearching, setIsSearching] = useState(false);
+  const [typingIndicator, setTypingIndicator] = useState(false);
 
+  // Debounce the search query
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Configure Fuse.js options
+  const fuseOptions = {
+    keys: ["name", "email", "phone", "class", "id"],
+    threshold: 0.3,
+    distance: 100,
+    minMatchCharLength: 2,
+    shouldSort: true,
+    includeScore: true,
+  };
+
+  // Create memoized Fuse instance
+  const fuse = useMemo(() => new Fuse(users, fuseOptions), [users]);
+
+  // Handle immediate typing feedback
   useEffect(() => {
-    const delay = setTimeout(() => {
-      const lowerCaseQuery = searchQuery.toLowerCase();
-      const newFilteredUsers = users.filter(
-        (user) =>
-          user.name.toLowerCase().includes(lowerCaseQuery) ||
-          user.email.toLowerCase().includes(lowerCaseQuery) ||
-          user.phone.includes(lowerCaseQuery) ||
-          user.class.toLowerCase().includes(lowerCaseQuery) ||
-          String(user.id) === searchQuery
-      );
-      setFilteredUsers(newFilteredUsers);
-      setCurrentPage(1); // Reset to first page on new search
-    }, 300);
+    if (searchQuery !== debouncedSearchQuery) {
+      setTypingIndicator(true);
+    }
+  }, [searchQuery, debouncedSearchQuery]);
 
-    return () => clearTimeout(delay);
-  }, [searchQuery, users]);
+  // Handle search and filtering with debounced value
+  useEffect(() => {
+    setIsSearching(true);
+    setTypingIndicator(false);
+
+    let results: LibraryUser[];
+
+    if (debouncedSearchQuery.trim() === "") {
+      results = users;
+    } else {
+      // Perform fuzzy search
+      const fuseResults = fuse.search(debouncedSearchQuery);
+      results = fuseResults.map((result) => result.item);
+    }
+
+    // Sort results
+    const sortedResults = [...results].sort((a, b) => {
+      const aValue = String(a[sortKey]).toLowerCase();
+      const bValue = String(b[sortKey]).toLowerCase();
+
+      if (aValue < bValue) {
+        return sortOrder === "asc" ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortOrder === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+
+    setFilteredUsers(sortedResults);
+    setCurrentPage(1);
+    setIsSearching(false);
+  }, [debouncedSearchQuery, users, sortKey, sortOrder, fuse]);
 
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
   const paginatedUsers = filteredUsers.slice(
@@ -72,6 +134,51 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
     });
   };
 
+  const SearchInput = () => (
+    <div className="relative w-full md:w-96">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Search
+          className={`h-5 w-5 text-gray-400 transition-all duration-200 ${
+            typingIndicator || isSearching ? "animate-pulse" : ""
+          }`}
+          aria-label="Search"
+        />
+      </div>
+      <input
+        type="text"
+        placeholder="Search by name, email, phone, or ID..."
+        className={`block w-full pl-10 pr-10 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl 
+          text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 
+          transition-all duration-200 ${
+            typingIndicator
+              ? "focus:ring-yellow-500/50 border-yellow-500/50"
+              : isSearching
+              ? "focus:ring-blue-500/50 border-blue-500/50"
+              : "focus:ring-indigo-500/50 border-transparent"
+          }`}
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        aria-label="Search members"
+      />
+      <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery("")}
+            className="text-gray-400 hover:text-white transition-colors duration-200"
+            aria-label="Clear search"
+          >
+            ✕
+          </button>
+        )}
+        {(typingIndicator || isSearching) && (
+          <span className="ml-2 text-xs text-gray-400">
+            {typingIndicator ? "Typing..." : "Searching..."}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -87,22 +194,53 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
                   Library Members
                 </h1>
                 <p className="text-gray-400 text-sm">
-                  Manage and view library card holders
+                  {typingIndicator
+                    ? "Waiting for you to finish typing..."
+                    : isSearching
+                    ? "Searching..."
+                    : `Showing ${filteredUsers.length} members`}
                 </p>
               </div>
             </div>
 
-            <div className="relative w-full md:w-96">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" aria-label="Search" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search members..."
-                className="block w-full pl-10 pr-4 py-2.5 bg-gray-800/50 border border-gray-700 rounded-xl text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent transition-shadow duration-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            <SearchInput />
+
+            <div className="flex space-x-4">
+              <select
+                className="bg-gray-800/50 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2"
+                onChange={(e) =>
+                  setSortKey(e.target.value as keyof LibraryUser)
+                }
+                value={sortKey}
+                aria-label="Sort by field"
+              >
+                <option value="name">Sort by Name</option>
+                <option value="membershipDate">Sort by Membership Date</option>
+                <option value="class">Sort by Class</option>
+              </select>
+
+              <button
+                onClick={() =>
+                  setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+                }
+                className="bg-gray-800/50 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 px-4 py-2 hover:bg-gray-700/50 transition-colors duration-200"
+                aria-label={`Sort ${
+                  sortOrder === "asc" ? "descending" : "ascending"
+                }`}
+              >
+                {sortOrder === "asc" ? "Ascending" : "Descending"}
+              </button>
+
+              <select
+                className="bg-gray-800/50 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2"
+                value={usersPerPage}
+                onChange={(e) => setUsersPerPage(Number(e.target.value))}
+                aria-label="Items per page"
+              >
+                <option value={6}>6 per page</option>
+                <option value={12}>12 per page</option>
+                <option value={24}>24 per page</option>
+              </select>
             </div>
           </div>
         </div>
@@ -133,41 +271,37 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
                       className="w-4 h-4 mr-2 text-gray-400"
                       aria-label="Email"
                     />
-                    <label>Email: </label>&nbsp;
-                    {user.email}
+                    <span>{user.email}</span>
                   </div>
                   <div className="flex items-center text-gray-300">
                     <Phone
                       className="w-4 h-4 mr-2 text-gray-400"
                       aria-label="Phone"
-                    />{" "}
-                    <label>Phone No.: </label>&nbsp;
-                    {user.phone}
+                    />
+                    <span>{user.phone}</span>
                   </div>
                   <div className="flex items-center text-gray-300">
                     <BookOpen
                       className="w-4 h-4 mr-2 text-gray-400"
                       aria-label="Class"
-                    />{" "}
-                    <label>Class: </label>&nbsp;
-                    {user.class}
+                    />
+                    <span>{user.class}</span>
                   </div>
                   <div className="flex items-center text-gray-300">
                     <List
-                      className="w-5 h-5 mr-2 text-gray-400"
+                      className="w-4 h-4 mr-2 text-gray-400"
                       aria-label="Current Rentals"
-                    />{" "}
-                    <label>Current Rentals: </label>&nbsp;
-                    {user.currentRentals?.length || 0}
+                    />
+                    <span>
+                      Current Rentals: {user.currentRentals?.length || 0}
+                    </span>
                   </div>
-
                   <div className="flex items-center text-gray-300">
                     <Calendar
                       className="w-4 h-4 mr-2 text-gray-400"
                       aria-label="Membership Date"
-                    />{" "}
-                    <label>Membership date: </label>&nbsp;
-                    {formatDate(user.membershipDate)}
+                    />
+                    <span>{formatDate(user.membershipDate)}</span>
                   </div>
                 </div>
               </div>
@@ -176,7 +310,7 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
         </div>
 
         {/* Empty State */}
-        {filteredUsers.length === 0 && (
+        {filteredUsers.length === 0 && !isSearching && (
           <div className="text-center py-12 px-4 rounded-xl border border-gray-700/50 bg-gray-800/50 backdrop-blur-sm">
             <UserX
               className="mx-auto h-12 w-12 text-gray-400"
@@ -186,7 +320,7 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
               No results found
             </h3>
             <p className="mt-2 text-gray-400">
-              We couldn't find any members matching your search.
+              Try adjusting your search terms or filters
             </p>
           </div>
         )}
@@ -202,7 +336,7 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
                 onClick={() => handlePageChange("prev")}
                 disabled={currentPage === 1}
                 className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-300 hover:text-white hover:bg-gray-700"
-                aria-label="Previous Page"
+                aria-label="Previous page"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -215,7 +349,7 @@ const LibraryCardSystem: React.FC<LibraryCardSystemProps> = ({ users }) => {
                 onClick={() => handlePageChange("next")}
                 disabled={currentPage === totalPages}
                 className="relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-300 hover:text-white hover:bg-gray-700"
-                aria-label="Next Page"
+                aria-label="Next page"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
