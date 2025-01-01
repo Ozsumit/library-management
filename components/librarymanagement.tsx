@@ -35,6 +35,7 @@ import { toast, ToastContainer } from "react-toastify";
 // import "react-toastify/dist/React-Toastify.css";
 import Footer from "./footer";
 import Link from "next/link";
+import ExcelToJson from "./xcltojson";
 
 // Types
 interface Book {
@@ -2381,6 +2382,37 @@ const LibraryManagementSystem: React.FC = () => {
           </button>
         </div>
 
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Reset Users
+          </h3>
+          <p className="mb-4 text-white">
+            This action will reset the users to its initial state. All data will
+            be lost.
+          </p>
+          <button
+            onClick={resetUsers}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Reset Users
+          </button>
+        </div>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Reset Books
+          </h3>
+          <p className="mb-4 text-white">
+            This action will reset the books to its initial state. All data will
+            be lost.
+          </p>
+          <button
+            onClick={resetbooks}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Reset Books
+          </button>
+        </div>
+
         {/* Bulk Book Addition */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-md">
           <h3 className="text-2xl font-semibold mb-4 text-white">
@@ -2393,9 +2425,10 @@ const LibraryManagementSystem: React.FC = () => {
             </button>
           </Link>
         </div>
+        <JsonToPdfConverter />
+        <ExcelToJson />
       </div>
 
-      <JsonToPdfConverter />
       <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="col-span-1 md:col-span-2 lg:col-span-3">
           <h2 className="text-3xl font-bold mb-6 text-white">Admin Panel</h2>
@@ -2404,14 +2437,14 @@ const LibraryManagementSystem: React.FC = () => {
               <input
                 type="password"
                 placeholder="Enter Admin Password"
-                className="w-full border p-3 mb-3 rounded-md hover:border-blue-500 focus:border-blue-500 bg-gray-700 text-white"
+                className="w-96 border h-16 p-3 bg-[#1f2937] mr-0 rounded-l-lg  hover:border-blue-500 focus:border-blue-500  text-white"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 required
               />
               <button
                 type="button"
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4"
+                className="bg-blue-500 h-16 mr-16 rounded-r-lg text-white px-4 py-2  hover:bg-blue-600 mb-4"
                 onClick={() => {
                   if (adminPassword === "admin123") {
                     setIsAdminAuthenticated(true);
@@ -2859,6 +2892,52 @@ const LibraryManagementSystem: React.FC = () => {
         setUsers([]);
         setRentals([]);
         toast.success("Database has been reset.");
+      }
+    } else {
+      toast.error("Incorrect password. Database reset canceled.");
+    }
+  };
+  const resetUsers = () => {
+    const adminPassword = "admin123"; // Define the required password
+
+    const userInput = window.prompt(
+      "Enter the admin password to delete all the users:"
+    );
+
+    if (userInput === adminPassword) {
+      if (
+        window.confirm(
+          "Are you sure you want to delete all Users ? All data will be lost."
+        )
+      ) {
+        localStorage.clear();
+        //
+        setUsers([]);
+        //
+        toast.success("Users has been Deleted.");
+      }
+    } else {
+      toast.error("Incorrect password. Database reset canceled.");
+    }
+  };
+  const resetbooks = () => {
+    const adminPassword = "admin123"; // Define the required password
+
+    const userInput = window.prompt(
+      "Enter the admin password to delete all books:"
+    );
+
+    if (userInput === adminPassword) {
+      if (
+        window.confirm(
+          "Are you sure you want to reset the database? All data will be lost."
+        )
+      ) {
+        localStorage.clear();
+        //
+        setBooks([]);
+        //
+        toast.success("Books has been deleted.");
       }
     } else {
       toast.error("Incorrect password. Database reset canceled.");
