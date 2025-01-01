@@ -2381,6 +2381,36 @@ const LibraryManagementSystem: React.FC = () => {
             Reset Database
           </button>
         </div>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Reset Users
+          </h3>
+          <p className="mb-4 text-white">
+            This action will reset the users to its initial state. All data will
+            be lost.
+          </p>
+          <button
+            onClick={resetusers}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Reset Users
+          </button>
+        </div>
+        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+          <h3 className="text-2xl font-semibold mb-4 text-white">
+            Reset Books
+          </h3>
+          <p className="mb-4 text-white">
+            This action will reset the books to its initial state. All data will
+            be lost.
+          </p>
+          <button
+            onClick={resetbooks}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+          >
+            Reset Books
+          </button>
+        </div>
 
         {/* Bulk Book Addition */}
         <div className="bg-gray-800 p-6 rounded-lg shadow-md">
@@ -2394,8 +2424,8 @@ const LibraryManagementSystem: React.FC = () => {
             </button>
           </Link>
         </div>
-<ExcelToJson/>
-      <JsonToPdfConverter />
+        <ExcelToJson />
+        <JsonToPdfConverter />
       </div>
       <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="col-span-1 md:col-span-2 lg:col-span-3">
@@ -2860,6 +2890,54 @@ const LibraryManagementSystem: React.FC = () => {
         setUsers([]);
         setRentals([]);
         toast.success("Database has been reset.");
+      }
+    } else {
+      toast.error("Incorrect password. Database reset canceled.");
+    }
+  };
+
+  const resetusers = () => {
+    const adminPassword = "admin123"; // Define the required password
+
+    const userInput = window.prompt(
+      "Enter the admin password to delete all  users:"
+    );
+
+    if (userInput === adminPassword) {
+      if (
+        window.confirm(
+          "Are you sure you want  to delete all  users? All data will be lost."
+        )
+      ) {
+        localStorage.clear();
+        //
+        setUsers([]);
+
+        toast.success(" All  users has been reset.");
+      }
+    } else {
+      toast.error("Incorrect password. Database reset canceled.");
+    }
+  };
+
+  const resetbooks = () => {
+    const adminPassword = "admin123"; // Define the required password
+
+    const userInput = window.prompt(
+      "Enter the admin password to delete all  books:"
+    );
+
+    if (userInput === adminPassword) {
+      if (
+        window.confirm(
+          "Are you sure you want  to delete all  books? All data will be lost."
+        )
+      ) {
+        localStorage.clear();
+        //
+        setBooks([]);
+
+        toast.success(" All  books has been reset.");
       }
     } else {
       toast.error("Incorrect password. Database reset canceled.");
