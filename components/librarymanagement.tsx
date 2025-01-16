@@ -34,6 +34,8 @@ import Fuse from "fuse.js";
 import { toast, ToastContainer } from "react-toastify";
 // import "react-toastify/dist/React-Toastify.css";
 import Footer from "./footer";
+import axios from "axios";
+
 import Link from "next/link";
 import ExcelToJson from "./xcltojson";
 
@@ -779,7 +781,7 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Create Backup Function
-  const createBackup = () => {
+  const createBackup = async () => {
     try {
       const currentDate = new Date();
       const day = String(currentDate.getDate()).padStart(2, "0");
@@ -791,8 +793,16 @@ const LibraryManagementSystem: React.FC = () => {
 
       const data = { books, users, rentals };
       const jsonString = JSON.stringify(data, null, 2);
+
+      // Save backup locally
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
+
+      // Send backup data to the Vercel API
+      await axios.post(
+        "https://https://vercel-backup-service.vercel.app/api/save-backup",
+        { data }
+      );
 
       console.log("Backup created at:", new Date().toLocaleString());
     } catch (error) {
