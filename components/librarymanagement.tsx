@@ -800,7 +800,7 @@ const LibraryManagementSystem: React.FC = () => {
 
       // Send backup data to the Vercel API
       await axios.post(
-        "https://https://vercel-backup-service.vercel.app/api/save-backup",
+        "https://vercel-backup-service.vercel.app/api/save-backup",
         { data }
       );
 
@@ -2429,7 +2429,7 @@ const LibraryManagementSystem: React.FC = () => {
           </h3>
           <p className="mb-4 text-white">Add books in bulk with easy layout</p>
           <Link href="/books">
-            <button className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
+            <button className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-red-600">
               Add Books
             </button>
           </Link>
