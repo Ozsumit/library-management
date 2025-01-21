@@ -1,17 +1,10 @@
-// app/page.tsx (if using the App Router in Next.js 13+)
 "use client";
-import LibraryManagementSystem from "@/components/librarymanagement";
-import BulkBookAddition from "@/components/bookmodal";
-import React from "react";
-import BulkAddUsers from "@/components/usermodal";
-import AsteroidGame from "@/components/game";
+import BackupManager from "@/components/ui/CRUD";
 
-const HomePage: React.FC = () => {
+export default function Page() {
   return (
-    <main className=" bg-[#111827] h-screen">
-      <AsteroidGame />
-    </main>
+    <div className="p-4">
+      <BackupManager />
+    </div>
   );
-};
-
-export default HomePage;
+}

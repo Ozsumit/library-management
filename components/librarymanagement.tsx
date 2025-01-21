@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Dashboard from "./search"; // Import the Dashboard component
 import JsonToPdfConverter from "./Table";
+import BackupManager from "@/components/ui/CRUD";
 import LibraryCardSystem from "./confirmdialog";
 import {
   BookOpen,
@@ -798,15 +799,21 @@ const LibraryManagementSystem: React.FC = () => {
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
 
-      // Send backup data to the Vercel API
-      await axios.post(
-        "https://vercel-backup-service.vercel.app/api/save-backup",
-        { data }
-      );
+      // Send backup data to the API
+      const response = await axios.post("/api/save-backup", { data });
 
-      console.log("Backup created at:", new Date().toLocaleString());
+      if (response.status === 200) {
+        console.log(
+          "Backup created successfully at:",
+          new Date().toLocaleString()
+        );
+        console.log("Backup ID:", response.data.backupId);
+      }
     } catch (error) {
-      console.error("Backup creation failed:", error);
+      console.error(
+        "Backup creation failed:",
+        (error as any).response?.data?.message || (error as Error).message
+      );
     }
   };
 
@@ -2436,6 +2443,9 @@ const LibraryManagementSystem: React.FC = () => {
         </div>
         <ExcelToJson />
         <JsonToPdfConverter />
+      </div>{" "}
+      <div className="p-4">
+        <BackupManager />
       </div>
       <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="col-span-1 md:col-span-2 lg:col-span-3">
