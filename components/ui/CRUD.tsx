@@ -155,7 +155,7 @@ const BackupManager = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      setRefreshKey((prev) => prev + 1);
+      setRefreshKey((prev) => prev + 1); // Refresh the list after deletion
     } catch (err) {
       if (err instanceof Error) {
         setError(`Failed to delete backup: ${err.message}`);
@@ -450,21 +450,21 @@ const BackupManager = () => {
             )}
           </div>
         </CardContent>
+        <Button
+          onClick={deleteOldBackups}
+          disabled={isLoading}
+          className="bg-red-800 w-30 m-10 text-white hover:bg-red-700"
+        >
+          {isLoading ? (
+            <>
+              <Loader className="w-4 h-4 mr-2 animate-spin" />
+              Deleting...
+            </>
+          ) : (
+            "Delete Backups Older Than 1 Month"
+          )}
+        </Button>
       </Card>
-      <Button
-        onClick={deleteOldBackups}
-        disabled={isLoading}
-        className="bg-red-800 w-30 m-6 text-white hover:bg-red-700"
-      >
-        {isLoading ? (
-          <>
-            <Loader className="w-4 h-4 mr-2 animate-spin" />
-            Deleting...
-          </>
-        ) : (
-          "Delete Backups Older Than 1 Month"
-        )}
-      </Button>
     </div>
   );
 };

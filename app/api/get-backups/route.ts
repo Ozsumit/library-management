@@ -85,3 +85,87 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    if (!uri || !dbName) {
+      return NextResponse.json(
+        { message: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const body = await request.json();
+    const client = await MongoClient.connect(uri);
+    const db = client.db(dbName);
+
+    const backup = {
+      filename: `backup-${new Date().toLocaleTimeString()}`,
+      createdAt: new Date(),
+      data: body.data,
+      size: JSON.stringify(body.data).length,
+    };
+
+    const result = await db.collection("backups").insertOne(backup);
+    await client.close();
+
+    return NextResponse.json({
+      message: "Backup created successfully",
+      backupId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error creating backup:", error);
+    return NextResponse.json(
+      { message: "Error creating backup", error: String(error) },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const backupId = searchParams.get("id");
+
+  if (!backupId) {
+    return NextResponse.json(
+      { message: "Backup ID is required" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    if (!uri || !dbName) {
+      return NextResponse.json(
+        { message: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const client = await MongoClient.connect(uri);
+    const db = client.db(dbName);
+
+    const result = await db
+      .collection("backups")
+      .deleteOne({ _id: new ObjectId(backupId) });
+
+    await client.close();
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { message: "Backup not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Backup deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting backup:", error);
+    return NextResponse.json(
+      { message: "Error deleting backup", error: String(error) },
+      { status: 500 }
+    );
+  }
+}

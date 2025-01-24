@@ -263,7 +263,7 @@ const LibraryManagementSystem: React.FC = () => {
       case "all":
       default:
         data = { books, users, rentals };
-        filename = `backup-\${new Date()
+        filename = `backup-${new Date()
           .toLocaleString()
           .replace(/[/: ]/g, "-")}.json`;
         break;
@@ -320,15 +320,31 @@ const LibraryManagementSystem: React.FC = () => {
   const mergeData = <T extends { id: number }>(
     existingData: T[],
     newData: T[]
-  ) => {
+  ): T[] => {
     const dataMap = new Map<number, T>();
-    // First add all existing items to the map
+
+    // First, add all existing items to the map
     existingData.forEach((item) => dataMap.set(item.id, item));
-    // Then overwrite with new data, preserving backup entries
-    newData.forEach((item) => dataMap.set(item.id, item));
+
+    // Then, handle new data
+    newData.forEach((newItem) => {
+      const existingItem = dataMap.get(newItem.id);
+
+      if (existingItem) {
+        // If the ID exists, check if the data is different
+        if (JSON.stringify(existingItem) !== JSON.stringify(newItem)) {
+          // If data is different, create a new entry with a new ID
+          const newId = generateNumericId(Array.from(dataMap.values()));
+          dataMap.set(newId, { ...newItem, id: newId });
+        }
+      } else {
+        // If the ID does not exist, add the new item
+        dataMap.set(newItem.id, newItem);
+      }
+    });
+
     return Array.from(dataMap.values());
   };
-
   // Enhanced Search Helpers
   const fuseOptions = {
     includeScore: true,
@@ -647,9 +663,9 @@ const LibraryManagementSystem: React.FC = () => {
       );
 
       toast.success(
-        `Book "\${
+        `Book "${
           books.find((book) => book.id === rental.bookId)?.title
-        }" returned by user "\${
+        }" returned by user "${
           users.find((user) => user.id === rental.userId)?.name
         }".`
       );
@@ -1787,7 +1803,7 @@ const LibraryManagementSystem: React.FC = () => {
         </select>
         <input
           type="text"
-          placeholder={`Enter \${
+          placeholder={`Enter ${
             rentalHistorySearch.type === "id" ? "rental ID" : "user name"
           }`}
           value={rentalHistorySearch.query}
@@ -2086,7 +2102,7 @@ const LibraryManagementSystem: React.FC = () => {
         </select>
         <input
           type="text"
-          placeholder={`Enter \${
+          placeholder={`Enter ${
             returnedBooksSearch.type === "id" ? "rental ID" : "user name"
           }`}
           value={returnedBooksSearch.query}
@@ -2510,19 +2526,23 @@ const LibraryManagementSystem: React.FC = () => {
                         <td className="p-3 border text-white">
                           {new Date(user.membershipDate).toLocaleDateString()}
                         </td>
-                        <td className="p-3 border text-center">
+                        <td className="px-6 py-4 text-sm space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
                           <button
                             onClick={() => {
                               setCurrentUser(user);
                               setIsUserModalOpen(true);
                             }}
-                            className="text-blue-500 mr-2 hover:text-blue-600"
+                            className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors w-full md:w-auto"
+
+                            // className="text-blue-500 mr-2 hover:text-blue-600"
                           >
                             <Edit className="mr-1" /> Edit
                           </button>
                           <button
                             onClick={() => deleteUser(user.id)}
-                            className="text-red-500 hover:text-red-600"
+                            className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
+
+                            // className="text-red-500 hover:text-red-600"
                           >
                             <Trash className="mr-1" /> Delete
                           </button>
@@ -3224,21 +3244,25 @@ const LibraryManagementSystem: React.FC = () => {
                       <td className="px-6 py-4 text-sm text-gray-300">
                         {new Date(user.membershipDate).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-2">
+                      <td className="px-6 py-4 text-sm space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
                         <button
                           onClick={() => {
                             setCurrentUser(user);
                             setIsUserModalOpen(true);
                           }}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors w-full md:w-auto"
+
+                          // className="text-blue-500 mr-2 hover:text-blue-600"
                         >
-                          <Edit className="w-4 h-4 mr-1" /> Edit
+                          <Edit className="mr-1" /> Edit
                         </button>
                         <button
                           onClick={() => deleteUser(user.id)}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
+
+                          // className="text-red-500 hover:text-red-600"
                         >
-                          <Trash className="w-4 h-4 mr-1" /> Delete
+                          <Trash className="mr-1" /> Delete
                         </button>
                       </td>
                     </tr>
