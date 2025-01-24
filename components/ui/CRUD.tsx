@@ -14,6 +14,7 @@ import {
   FileText,
   Database,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface Backup {
   _id?: string;
@@ -33,7 +34,7 @@ const BackupManager = () => {
   const [isImporting, setIsImporting] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-
+  const [forceRefresh, setForceRefresh] = useState(false);
   const fetchBackups = async () => {
     const controller = new AbortController();
     try {
@@ -121,21 +122,33 @@ const BackupManager = () => {
     try {
       setIsImporting(backupId);
       setError(null);
-      const response = await fetch(`/api/get-backups?id=${backupId}`, {
-        method: "GET",
-      });
+      setIsImporting(backupId);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // Fetch backup data
+      const backupRes = await fetch(`/api/get-backups?download=${backupId}`);
+      const backupData = await backupRes.json();
 
-      const importedData = await response.json();
-      await applyBackupData(importedData);
+      // Apply backup
+      await applyBackupData(backupData);
+
+      // Force refresh of all data
+      setForceRefresh((prev) => !prev);
+      toast.success("Database restored successfully!");
+      // Fetch backup data
+      // const backupRes = await fetch(`/api/get-backups?download=${backupId}`);
+      // if (!backupRes.ok) throw new Error("Failed to fetch backup");
+      // const backupData = await backupRes.json();
+
+      // Restore database
+      await applyBackupData(backupData);
+
+      // Refresh UI
       setRefreshKey((prev) => prev + 1);
+      // toast.success("Database restored successfully!");
+      //
+      toast.success("Database restored successfully!");
     } catch (err) {
-      if (err instanceof Error) {
-        setError(`Failed to import backup: ${err.message}`);
-      }
+      setError(err instanceof Error ? err.message : "Restore failed");
     } finally {
       setIsImporting(null);
     }
@@ -216,11 +229,30 @@ const BackupManager = () => {
   const collectBackupData = async () => ({
     /* Collect your backup data */
   });
+  const applyBackupData = async (backupData: any) => {
+    try {
+      const response = await fetch("/api/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          books: backupData.books || [],
+          users: backupData.users || [],
+        }),
+      });
 
-  const applyBackupData = async (data: unknown) => {
-    /* Apply your backup data */
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message);
+      }
+
+      // Refresh all data
+      await fetchBackups();
+      window.location.reload(); // Force full state refresh
+    } catch (err) {
+      console.error("Restore failed:", err);
+      throw err;
+    }
   };
-
   return (
     <div className=" text-white  p-4">
       <Card className="w-full max-w-4xl mx-auto bg-gray-800 border-b border-gray-800">

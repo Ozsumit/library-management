@@ -20,6 +20,7 @@ export async function GET(request: Request) {
     const db = client.db(dbName);
 
     // Handle download request
+    // In the GET function where download is handled
     if (downloadId) {
       const backup = await db
         .collection("backups")
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
         );
       }
 
-      // Check if data exists and has the expected structure
+      // Validate backup data structure
       if (!backup.data || typeof backup.data !== "object") {
         return NextResponse.json(
           { message: "Invalid backup data structure" },
@@ -42,10 +43,11 @@ export async function GET(request: Request) {
         );
       }
 
-      // Extract just the books and users arrays
+      // Create the download data with all collections (books, users, rentals)
       const downloadData = {
         books: backup.data.books || [],
         users: backup.data.users || [],
+        rentals: backup.data.rentals || [],
       };
 
       // Create the response with the specified data
@@ -55,9 +57,6 @@ export async function GET(request: Request) {
           "Content-Disposition": `attachment; filename="backup-${
             new Date().toISOString().split("T")[0]
           }.json"`,
-          "Content-Length": new Blob([
-            JSON.stringify(downloadData, null, 2),
-          ]).size.toString(),
         },
       });
 
