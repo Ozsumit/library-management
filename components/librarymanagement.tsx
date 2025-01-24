@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import Dashboard from "./search"; // Import the Dashboard component
+import Dashboard from "./search";
 import JsonToPdfConverter from "./Table";
 import BackupManager from "@/components/ui/CRUD";
 import LibraryCardSystem from "./confirmdialog";
@@ -33,10 +33,8 @@ import { saveAs } from "file-saver";
 import { motion } from "framer-motion";
 import Fuse from "fuse.js";
 import { toast, ToastContainer } from "react-toastify";
-// import "react-toastify/dist/React-Toastify.css";
 import Footer from "./footer";
 import axios from "axios";
-
 import Link from "next/link";
 import ExcelToJson from "./xcltojson";
 
@@ -71,8 +69,8 @@ interface Rental {
   dueDate: string;
   returnDate?: string;
   customReturnDate?: string;
-  returnTime?: string; // Add return time
-  rentalType: "short" | "long"; // Add rental type
+  returnTime?: string;
+  rentalType: "short" | "long";
 }
 
 interface SearchState {
@@ -180,8 +178,8 @@ const LibraryManagementSystem: React.FC = () => {
   const [selectedRental, setSelectedRental] = useState<Rental | null>(null);
   const [verificationUserId, setVerificationUserId] = useState("");
   const [rentVerificationUserId, setRentVerificationUserId] = useState("");
-  const [customReturnDate, setCustomReturnDate] = useState(""); // State for custom return date
-  const [rentalType, setRentalType] = useState<"short" | "long">("short"); // State for rental type
+  const [customReturnDate, setCustomReturnDate] = useState("");
+  const [rentalType, setRentalType] = useState<"short" | "long">("short");
 
   // Admin Panel State
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
@@ -208,9 +206,6 @@ const LibraryManagementSystem: React.FC = () => {
     Phone: {phone}
     Membership Date: {membershipDate}
   `);
-
-  // Loading State
-  const [isLoading, setIsLoading] = useState(false);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -338,7 +333,6 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Enhanced Search Helpers
-  // Enhanced Search Helpers
   const fuseOptions = {
     includeScore: true,
     keys: ["title", "sources", "class", "genre"],
@@ -364,65 +358,66 @@ const LibraryManagementSystem: React.FC = () => {
   const searchBooks = (books: Book[]): Book[] => {
     if (!bookSearch.query) return books;
     const result = fuseBooks.search(bookSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchUsers = (users: User[]): User[] => {
     if (!userSearch.query) return users;
     const result = fuseUsers.search(userSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchRentalUsers = (users: User[]): User[] => {
     if (!rentalUserSearch.query) return users;
     const result = fuseUsers.search(rentalUserSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchRental = (users: User[]): User[] => {
     if (!rentalSearch.query) return users;
     const result = fuseUsers.search(rentalSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchRentalHistory = (rentals: Rental[]): Rental[] => {
     if (!rentalHistorySearch.query) return rentals;
     const result = fuseRentals.search(rentalHistorySearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchUnreturnedBooks = (rentals: Rental[]): Rental[] => {
     if (!unreturnedBooksSearch.query) return rentals;
     const result = fuseRentals.search(unreturnedBooksSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchBookRentals = (rentals: Rental[]): Rental[] => {
     if (!bookRentalSearch.query) return rentals;
     const result = fuseRentals.search(bookRentalSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchAvailableBooks = (books: Book[]): Book[] => {
     if (!availableBookSearch.query) return books;
     const result = fuseBooks.search(availableBookSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
 
   const searchReturnedBooks = (rentals: Rental[]): Rental[] => {
     if (!returnedBooksSearch.query) return rentals;
     const result = fuseRentals.search(returnedBooksSearch.query);
-    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0)); // Sort by relevance score
+    result.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
     return result.map((item) => item.item);
   };
+
   // Book Management Functions
   const addBook = (book: Book) => {
     const newBook = { ...book, id: generateNumericId(books) };
@@ -446,25 +441,21 @@ const LibraryManagementSystem: React.FC = () => {
 
   const confirmDeleteBook = () => {
     if (selectedBook) {
-      // Ensure the selected book exists in the current books list
       const bookExists = books.some((book) => book.id === selectedBook.id);
 
       if (bookExists && selectedBook.id === parseInt(verificationUserId)) {
-        // Proceed with deletion
         setBooks(books.filter((book) => book.id !== selectedBook.id));
         setIsDeleteBookModalOpen(false);
         setSelectedBook(null);
         createBackup();
         console.log(`Book with ID: ${selectedBook.id} deleted.`);
       } else {
-        // Alert if the book does not exist or the ID is incorrect
         toast.error("Selected book does not exist or the ID is incorrect.");
         console.log(
           "Delete operation aborted: Book not found or incorrect ID."
         );
       }
     } else {
-      // Handle case where no book is selected
       toast.error("No book selected for deletion.");
       console.log("Delete operation aborted: No book selected.");
     }
@@ -516,8 +507,8 @@ const LibraryManagementSystem: React.FC = () => {
     const rentalDate = new Date().toISOString();
     const dueDate =
       rentalType === "short"
-        ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days from now
-        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(); // 1 year from now
+        ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+        : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
     const newRental = {
       id: generateNumericId(rentals),
       bookId,
@@ -529,7 +520,6 @@ const LibraryManagementSystem: React.FC = () => {
     };
     setRentals([...rentals, newRental]);
 
-    // Update the book's available copies
     setBooks(
       books.map((book) =>
         book.id === bookId
@@ -538,7 +528,6 @@ const LibraryManagementSystem: React.FC = () => {
       )
     );
 
-    // Update the user's current rentals
     setUsers(
       users.map((user) =>
         user.id === userId
@@ -563,7 +552,6 @@ const LibraryManagementSystem: React.FC = () => {
   const deleteRental = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -572,7 +560,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the user's current rentals
       setUsers(
         users.map((user) =>
           user.id === rental.userId
@@ -618,8 +605,8 @@ const LibraryManagementSystem: React.FC = () => {
       setSelectedBook(null);
       setSelectedUser(null);
       setRentVerificationUserId("");
-      setCustomReturnDate(""); // Reset custom return date
-      setRentalType("short"); // Reset rental type
+      setCustomReturnDate("");
+      setRentalType("short");
     } else {
       toast.error("Verification failed. Please enter the correct user ID.");
     }
@@ -629,7 +616,6 @@ const LibraryManagementSystem: React.FC = () => {
   const returnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -638,7 +624,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the user's current rentals
       setUsers(
         users.map((user) =>
           user.id === rental.userId
@@ -652,7 +637,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the rental's return date
       setRentals(
         rentals.map((r) =>
           r.id === rentalId
@@ -665,7 +649,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Add notification
       toast.success(
         `Book "\${
           books.find((book) => book.id === rental.bookId)?.title
@@ -682,7 +665,6 @@ const LibraryManagementSystem: React.FC = () => {
   const undoReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -691,7 +673,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the user's current rentals
       setUsers(
         users.map((user) =>
           user.id === rental.userId
@@ -703,7 +684,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the rental's return date
       setRentals(
         rentals.map((r) =>
           r.id === rentalId
@@ -720,7 +700,6 @@ const LibraryManagementSystem: React.FC = () => {
   const confirmReturnBook = (rentalId: number) => {
     const rental = rentals.find((r) => r.id === rentalId);
     if (rental) {
-      // Update the book's available copies
       setBooks(
         books.map((book) =>
           book.id === rental.bookId
@@ -729,7 +708,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the user's current rentals
       setUsers(
         users.map((user) =>
           user.id === rental.userId
@@ -743,7 +721,6 @@ const LibraryManagementSystem: React.FC = () => {
         )
       );
 
-      // Update the rental's return date
       setRentals(
         rentals.map((r) =>
           r.id === rentalId
@@ -778,7 +755,7 @@ const LibraryManagementSystem: React.FC = () => {
     const store = tx.objectStore(storeName);
     store.clear();
     data.forEach((item) => store.add(item));
-    await tx.oncomplete;
+    await tx.done;
   };
 
   // Create Backup Function
@@ -795,11 +772,9 @@ const LibraryManagementSystem: React.FC = () => {
       const data = { books, users, rentals };
       const jsonString = JSON.stringify(data, null, 2);
 
-      // Save backup locally
       const blob = new Blob([jsonString], { type: "application/json" });
       saveAs(blob, filename);
 
-      // Send backup data to the API
       const response = await axios.post("/api/save-backup", { data });
 
       if (response.status === 200) {
@@ -831,7 +806,7 @@ const LibraryManagementSystem: React.FC = () => {
               twoDaysInMillis
         )
       );
-    }, 24 * 60 * 60 * 1000); // Check every 24 hours
+    }, 24 * 60 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -892,7 +867,6 @@ const LibraryManagementSystem: React.FC = () => {
       >
         Clear
       </button>
-      {/* Export and Import Buttons */}
       <button
         onClick={() => handleExport("books")}
         className="bg-blue-500 text-white p-2 rounded-md flex items-center w-full md:w-auto hover:bg-blue-600"
@@ -912,7 +886,7 @@ const LibraryManagementSystem: React.FC = () => {
     </div>
   );
 
-  // Render User Search (similar to Book Search)
+  // Render User Search
   const renderUserSearch = () => (
     <div className="flex flex-col md:flex-row items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
       <select
@@ -964,7 +938,6 @@ const LibraryManagementSystem: React.FC = () => {
       >
         Clear
       </button>
-      {/* Export and Import Buttons */}
       <button
         onClick={() => handleExport("users")}
         className="bg-blue-500 text-white p-2 rounded-md flex items-center w-full md:w-auto hover:bg-blue-600"
@@ -983,7 +956,7 @@ const LibraryManagementSystem: React.FC = () => {
       </label>
     </div>
   );
-  // Render Rental User Search
+
   // Render Rental User Search
   const renderRentalUserSearch = () => (
     <div className="flex flex-col md:flex-row items-center mb-4 space-y-2 md:space-y-0 md:space-x-2">
@@ -1040,6 +1013,7 @@ const LibraryManagementSystem: React.FC = () => {
       </button>
     </div>
   );
+
   // Render Book Modal
   const renderBookModal = () => {
     if (!isBookModalOpen) return null;
@@ -1357,7 +1331,7 @@ const LibraryManagementSystem: React.FC = () => {
                   ...prevState,
                   type: "id",
                   query: "",
-                  sortBy: prevState.sortBy, // Maintain the existing sortBy value
+                  sortBy: prevState.sortBy,
                 }))
               }
               className="bg-gray-700 p-3 rounded-md mt-2 w-full hover:bg-gray-600 text-white"
@@ -1776,31 +1750,6 @@ const LibraryManagementSystem: React.FC = () => {
           }
           className="bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 flex-1 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
         />
-        {/* <select
-          value={availableBookSearch.sortBy}
-          onChange={(e) =>
-            setAvailableBookSearch({
-              ...availableBookSearch,
-              sortBy: e.target.value as
-                | "id"
-                | "title"
-                | "sources"
-                | "class"
-                | "genre"
-                | "totalCopies"
-                | "availableCopies",
-            })
-          }
-          className="bg-gray-700 text-white border  rounded-lg px-4 py-2 w-32 md:w-32 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
-        >
-          <option value="id">Sort by ID</option>
-          <option value="title">Sort by Title</option>
-          <option value="sources">Sort by Sources</option>
-          <option value="class">Sort by Class</option>
-          <option value="genre">Sort by Genre</option>
-          <option value="totalCopies">Sort by Total Copies</option>
-          <option value="availableCopies">Sort by Available Copies</option>
-        </select> */}
         <button
           onClick={() =>
             setAvailableBookSearch({ type: "id", query: "", sortBy: "id" })
@@ -1841,7 +1790,7 @@ const LibraryManagementSystem: React.FC = () => {
         </select>
         <input
           type="text"
-          placeholder={`Enter ${
+          placeholder={`Enter \${
             rentalHistorySearch.type === "id" ? "rental ID" : "user name"
           }`}
           value={rentalHistorySearch.query}
@@ -2066,7 +2015,8 @@ const LibraryManagementSystem: React.FC = () => {
         {groupRentalsByUser(
           searchUnreturnedBooks(rentals).filter(
             (rental) =>
-              !rental.returnDate && new Date(rental.dueDate) < new Date()
+              !rental.returnDate &&
+              new Date(rental.customReturnDate || rental.dueDate) < new Date()
           )
         ).map((group) => (
           <div key={group.userId} className="mb-4">
@@ -2137,10 +2087,9 @@ const LibraryManagementSystem: React.FC = () => {
           <option value="id">Search by ID</option>
           <option value="name">Search by Name</option>
         </select>
-
         <input
           type="text"
-          placeholder={`Enter ${
+          placeholder={`Enter \${
             returnedBooksSearch.type === "id" ? "rental ID" : "user name"
           }`}
           value={returnedBooksSearch.query}
@@ -2152,7 +2101,6 @@ const LibraryManagementSystem: React.FC = () => {
           }
           className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
-
         <select
           value={returnedBooksSearch.sortBy}
           onChange={(e) =>
@@ -2174,7 +2122,6 @@ const LibraryManagementSystem: React.FC = () => {
           <option value="returnDate">Sort by Return Date</option>
           <option value="customReturnDate">Sort by Custom Return Date</option>
         </select>
-
         <button
           onClick={() =>
             setReturnedBooksSearch({ type: "id", query: "", sortBy: "id" })
@@ -2184,13 +2131,12 @@ const LibraryManagementSystem: React.FC = () => {
           Clear
         </button>
       </div>
-
       <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
         {groupRentalsByUser(
           searchReturnedBooks(rentals).filter((rental) => rental.returnDate)
         ).map((group) => (
           <div key={group.userId} className="mb-6">
-            <h3 className="text-2xl font-semibold mb-4 text-white">
+            <h3 className="text-2xl font-semibold mb-2 text-white">
               {users.find((user) => user.id === group.userId)?.name ||
                 "Unknown User"}
             </h3>
@@ -2248,20 +2194,24 @@ const LibraryManagementSystem: React.FC = () => {
                           : "N/A"}
                       </td>
                       <td className="p-4 text-gray-300">
-                        {rental.returnDate &&
-                          new Date(rental.returnDate).toLocaleDateString()}
+                        {rental.returnDate
+                          ? new Date(rental.returnDate).toLocaleDateString()
+                          : "N/A"}
                       </td>
                       <td className="p-4 text-gray-300">
                         {rental.returnTime || "N/A"}
                       </td>
                       <td className="p-4 text-gray-300">
-                        {rental.returnDate &&
-                          (new Date(rental.returnDate) <=
+                        {rental.returnDate ? (
+                          new Date(rental.returnDate) <=
                           new Date(rental.dueDate) ? (
                             <span className="text-green-400">On Time</span>
                           ) : (
                             <span className="text-red-400">Late</span>
-                          ))}
+                          )
+                        ) : (
+                          "Not Returned"
+                        )}
                       </td>
                       <td className="p-4">
                         <button
@@ -2284,37 +2234,76 @@ const LibraryManagementSystem: React.FC = () => {
 
   // Render Backup Tab
   const renderBackupTab = () => (
-    <div>
-      <h2 className="text-3xl font-bold mb-6 text-white">Backup</h2>
-      <button
-        onClick={() => handleExport("all")}
-        className="bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600"
-        title="Create Backup"
-      >
-        <Download size={16} className="mr-1" /> Create Backup
-      </button>
-      <p className="mt-4 text-white">
-        Last Backup Time:{" "}
-        {localStorage.getItem("lastBackupTime")
-          ? new Date(
-              parseInt(localStorage.getItem("lastBackupTime")!, 10)
-            ).toLocaleString()
-          : "N/A"}
-      </p>
-      <div className="mt-4">
-        <h3 className="text-2xl font-semibold mb-4 text-white">
-          Import Backup
-        </h3>
-        <label className="bg-green-500 text-white p-2 rounded-md flex items-center cursor-pointer w-full md:w-auto hover:bg-green-600">
-          <Upload size={16} className="mr-1" /> Import Backup
-          <input
-            type="file"
-            accept=".json"
-            className="hidden"
-            onChange={(e) => handleImport("all", e)}
-          />
-        </label>
+    <div className="w-full min-h-full flex flex-col bg-gray-900">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+        <div className="bg-gray-800  dark:bg-gray-800 rounded-2xl shadow-lg p-6  border-gray-700 flex flex-col">
+          <div className="flex items-center mb-4">
+            <Download
+              size={24}
+              className="mr-3 text-blue-500 dark:text-blue-400"
+            />
+            <h2 className="text-xl font-semibold text-white">Create Backup</h2>
+          </div>
+          <button
+            onClick={() => handleExport("all")}
+            className="
+              w-full py-3 px-4 
+             bg-blue-600 
+              text-white 
+              rounded-xl 
+              :hover:bg-blue-700
+              transition-colors
+              flex items-center justify-center
+            "
+          >
+            <Download size={20} className="mr-2" />
+            Create Full Backup
+          </button>
+          <p className="mt-4 text-sm text-gray-400 text-center">
+            Last Backup:{" "}
+            {localStorage.getItem("lastBackupTime")
+              ? new Date(
+                  parseInt(localStorage.getItem("lastBackupTime")!, 10)
+                ).toLocaleString()
+              : "No recent backup"}
+          </p>
+        </div>
+
+        <div className="bg-gray-800  dark:bg-gray-800 rounded-2xl shadow-lg p-6 border-gray-700 flex flex-col">
+          <div className="flex items-center mb-4">
+            <Upload
+              size={24}
+              className="mr-3 text-green-500 dark:text-green-400"
+            />
+            <h2 className="text-xl font-semibold text-white">Import Backup</h2>
+          </div>
+          <label
+            className="
+              w-full py-3 px-4
+              bg-green-500 dark:bg-green-600 
+              text-white 
+              rounded-xl 
+              hover:bg-green-600 dark:hover:bg-green-700
+              transition-colors
+              flex items-center justify-center
+              cursor-pointer
+            "
+          >
+            <Upload size={20} className="mr-2" />
+            Import Backup File
+            <input
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={(e) => handleImport("all", e)}
+            />
+          </label>
+          <p className="mt-4 text-sm text-gray-400 text-center">
+            Restore from a previous backup
+          </p>
+        </div>
       </div>
+      <BackupManager />
     </div>
   );
 
@@ -2430,7 +2419,7 @@ const LibraryManagementSystem: React.FC = () => {
         </div>
 
         {/* Bulk Book Addition */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-md">
+        <div className="bg-gray-800 max-h-[20rem] p-6 rounded-lg shadow-md">
           <h3 className="text-2xl font-semibold mb-4 text-white">
             Bulk Book Addition
           </h3>
@@ -2444,9 +2433,7 @@ const LibraryManagementSystem: React.FC = () => {
         <ExcelToJson />
         <JsonToPdfConverter />
       </div>{" "}
-      <div className="p-4">
-        <BackupManager />
-      </div>
+      <div className="p-4"></div>
       <div className="bg-gray-900 p-6 rounded-lg grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="col-span-1 md:col-span-2 lg:col-span-3">
           <h2 className="text-3xl font-bold mb-6 text-white">Admin Panel</h2>
@@ -2920,20 +2907,20 @@ const LibraryManagementSystem: React.FC = () => {
     const adminPassword = "admin123"; // Define the required password
 
     const userInput = window.prompt(
-      "Enter the admin password to delete all  users:"
+      "Enter the admin password to delete all users:"
     );
 
     if (userInput === adminPassword) {
       if (
         window.confirm(
-          "Are you sure you want  to delete all  users? All data will be lost."
+          "Are you sure you want to delete all users? All data will be lost."
         )
       ) {
         localStorage.clear();
         //
         setUsers([]);
 
-        toast.success(" All  users has been reset.");
+        toast.success("All users have been reset.");
       }
     } else {
       toast.error("Incorrect password. Database reset canceled.");
@@ -2944,20 +2931,20 @@ const LibraryManagementSystem: React.FC = () => {
     const adminPassword = "admin123"; // Define the required password
 
     const userInput = window.prompt(
-      "Enter the admin password to delete all  books:"
+      "Enter the admin password to delete all books:"
     );
 
     if (userInput === adminPassword) {
       if (
         window.confirm(
-          "Are you sure you want  to delete all  books? All data will be lost."
+          "Are you sure you want to delete all books? All data will be lost."
         )
       ) {
         localStorage.clear();
         //
         setBooks([]);
 
-        toast.success(" All  books has been reset.");
+        toast.success("All books have been reset.");
       }
     } else {
       toast.error("Incorrect password. Database reset canceled.");
@@ -3014,113 +3001,54 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      {/* Navigation Tabs */}
-      <div className="sticky top-0 bg-gray-900/90 backdrop-blur-sm border-b border-gray-700 px-6 py-4 z-10">
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => setActiveTab("books")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "books"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <BookOpen className="w-4 h-4 mr-2" />
-            <span>Books</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "users"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <Users className="w-4 h-4 mr-2" />
-            <span>Users</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("rentals")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "rentals"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <ShoppingCart className="w-4 h-4 mr-2" />
-            <span>Rentals</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("rentalHistory")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "rentalHistory"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <History className="w-4 h-4 mr-2" />
-            <span>Rental History</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("unreturned")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "unreturned"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <AlertCircle className="w-4 h-4 mr-2" />
-            <span>Unreturned Books</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("returned")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "returned"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <CheckCircle className="w-4 h-4 mr-2" />
-            <span>Returned Books</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("backup")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "backup"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <Clock className="w-4 h-4 mr-2" />
-            <span>Backup</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("Profiles")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "Profiles"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <Lock className="w-4 h-4 mr-2" />
-            <span>Profiles</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("tools")}
-            className={`flex items-center px-4 py-2.5 rounded-lg transition-colors ${
-              activeTab === "tools"
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            <Settings className="w-4 h-4 mr-2" />
-            <span>Tools</span>
-          </button>
+    <div className="min-h-screen flex">
+      {/* Sidebar Navigation */}
+      <div className="w-64 bg-gray-900 border-r border-gray-700 fixed h-full overflow-y-auto">
+        <div className="p-4">
+          <h2 className="text-xl font-bold text-white mb-6">Library System</h2>
+          <nav className="space-y-2">
+            {[
+              { id: "books", label: "Books", icon: BookOpen },
+              { id: "users", label: "Users", icon: Users },
+              { id: "rentals", label: "Rentals", icon: ShoppingCart },
+              { id: "rentalHistory", label: "History", icon: History },
+              { id: "unreturned", label: "Unreturned", icon: AlertCircle },
+              { id: "returned", label: "Returned", icon: CheckCircle },
+              { id: "backup", label: "Backup", icon: Clock },
+              { id: "Profiles", label: "Profiles", icon: Lock },
+              { id: "tools", label: "Tools", icon: Settings },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={`w-full flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                  activeTab === item.id
+                    ? "bg-indigo-600 text-white"
+                    : "text-gray-300 hover:bg-gray-800"
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
       </div>
 
-      <div className="p-6">
+      {/* Main Content */}
+      <div className="flex-1 ml-64 p-8">
+        {/* Export All Button */}
+        <div className="flex justify-end mb-6">
+          <button
+            onClick={() => handleExport("all")}
+            className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <Download className="w-5 h-5 mr-2" />
+            Export All
+          </button>
+        </div>
+
+        {/* Content Sections */}
         {activeTab === "books" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -3199,25 +3127,25 @@ const LibraryManagementSystem: React.FC = () => {
                       <td className="px-6 py-4 text-sm text-gray-300">
                         {book.genre}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-300 text-center">
+                      <td className="px-6 py-4 text-sm text-center text-gray-300">
                         {book.totalCopies}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-300 text-center">
+                      <td className="px-6 py-4 text-sm text-center text-gray-300">
                         {book.availableCopies}
                       </td>
-                      <td className="px-6 py-4 text-sm space-x-2">
+                      <td className="px-6 py-4 text-sm space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
                         <button
                           onClick={() => {
                             setCurrentBook(book);
                             setIsBookModalOpen(true);
                           }}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors w-full md:w-auto"
                         >
                           <Edit className="w-4 h-4 mr-1" /> Edit
                         </button>
                         <button
                           onClick={() => deleteBook(book.id)}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
                         >
                           <Trash className="w-4 h-4 mr-1" /> Delete
                         </button>
@@ -3343,14 +3271,6 @@ const LibraryManagementSystem: React.FC = () => {
         {renderDeleteUserModal()}
 
         <ToastContainer position="bottom-right" autoClose={4000} />
-
-        <button
-          onClick={() => handleExport("all")}
-          className="fixed bottom-4 right-4 inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-lg"
-          title="Export All"
-        >
-          <Download className="w-4 h-4 mr-2" /> Export All
-        </button>
       </div>
     </div>
   );

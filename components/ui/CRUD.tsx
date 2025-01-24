@@ -183,6 +183,7 @@ const BackupManager = () => {
       );
     }
   };
+
   const formatDate = useCallback((dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -215,144 +216,150 @@ const BackupManager = () => {
   const collectBackupData = async () => ({
     /* Collect your backup data */
   });
+
   const applyBackupData = async (data: unknown) => {
     /* Apply your backup data */
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto dark:bg-gray-800">
-      <CardHeader className="border-b dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              <span>Backup Management</span>
-            </CardTitle>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              <Clock className="w-4 h-4 inline mr-1" />
-              Last updated: {getTimeSinceRefresh()}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setRefreshKey((prev) => prev + 1)}
-              variant="outline"
-              size="icon"
-              className="dark:bg-gray-700"
-              disabled={isLoading}
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
-              />
-            </Button>
-            <Button
-              onClick={createBackup}
-              disabled={isCreating || isLoading}
-              className="dark:bg-blue-600 dark:hover:bg-blue-700"
-            >
-              {isCreating ? (
-                <>
-                  <Loader className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                "Create Backup"
-              )}
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-6">
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <div className="space-y-4">
-          {backups.map((backup) => (
-            <div
-              key={backup._id || backup.id}
-              className="flex items-center justify-between p-4 rounded-lg border dark:border-gray-700 dark:bg-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-            >
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  <h3 className="font-medium dark:text-gray-200">
-                    {backup.filename || "Unnamed Backup"}
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Created: {formatDate(backup.createdAt)}
-                </p>
-                {backup.size && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Size: {(backup.size / 1024).toFixed(2)} KB
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => downloadBackup(backup)}
-                  variant="outline"
-                  size="icon"
-                  className="dark:bg-gray-700"
-                  title="Download backup"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button
-                  onClick={() => deleteBackup(backup._id || backup.id || "")}
-                  variant="outline"
-                  size="icon"
-                  className="dark:bg-gray-700"
-                  disabled={isDeleting === (backup._id || backup.id)}
-                  title="Delete backup"
-                >
-                  {isDeleting === (backup._id || backup.id) ? (
-                    <Loader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4" />
-                  )}
-                </Button>
-                <Button
-                  onClick={() => importBackup(backup._id || backup.id || "")}
-                  variant="outline"
-                  size="icon"
-                  className="dark:bg-gray-700"
-                  disabled={isImporting === (backup._id || backup.id)}
-                  title="Import backup"
-                >
-                  {isImporting === (backup._id || backup.id) ? (
-                    <Loader className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          {!isLoading && backups.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              No backups found. Create your first backup!
-            </div>
-          )}
-
-          {isLoading && (
-            <div className="text-center py-8">
-              <Loader className="w-6 h-6 animate-spin mx-auto text-gray-500 dark:text-gray-400" />
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                Loading backups...
+    <div className=" text-white  p-4">
+      <Card className="w-full max-w-4xl mx-auto bg-gray-800 border-b border-gray-800">
+        <CardHeader className="border-b border-gray-400">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <Database className="w-5 h-5 text-gray-300" />
+                <span>Backup Management</span>
+              </CardTitle>
+              <p className="text-sm text-gray-400 mt-1">
+                <Clock className="w-4 h-4 inline mr-1 text-gray-500" />
+                Last updated: {getTimeSinceRefresh()}
               </p>
             </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setRefreshKey((prev) => prev + 1)}
+                variant="outline"
+                size="icon"
+                className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                disabled={isLoading}
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
+                />
+              </Button>
+              <Button
+                onClick={createBackup}
+                disabled={isCreating || isLoading}
+                className="bg-blue-800 text-white hover:bg-blue-700"
+              >
+                {isCreating ? (
+                  <>
+                    <Loader className="w-4 h-4 mr-2 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Backup"
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="pt-6 bg-gray-800 ">
+          {error && (
+            <Alert
+              variant="destructive"
+              className="mb-4 bg-red-900 border-red-800"
+            >
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <AlertDescription className="text-red-300">
+                {error}
+              </AlertDescription>
+            </Alert>
           )}
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="space-y-4">
+            {backups.map((backup) => (
+              <div
+                key={backup._id || backup.id}
+                className="flex items-center justify-between p-4 rounded-lg border border-gray-800 bg-gray-800 hover:bg-gray-900 transition-colors"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-500" />
+                    <h3 className="font-medium text-white">
+                      {backup.filename || "Unnamed Backup"}
+                    </h3>
+                  </div>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Created: {formatDate(backup.createdAt)}
+                  </p>
+                  {backup.size && (
+                    <p className="text-sm text-gray-400">
+                      Size: {(backup.size / 1024).toFixed(2)} KB
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => downloadBackup(backup)}
+                    variant="outline"
+                    size="icon"
+                    className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                    title="Download backup"
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    onClick={() => deleteBackup(backup._id || backup.id || "")}
+                    variant="outline"
+                    size="icon"
+                    className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                    disabled={isDeleting === (backup._id || backup.id)}
+                    title="Delete backup"
+                  >
+                    {isDeleting === (backup._id || backup.id) ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => importBackup(backup._id || backup.id || "")}
+                    variant="outline"
+                    size="icon"
+                    className="bg-gray-800 text-gray-300 hover:bg-gray-700 border-gray-700"
+                    disabled={isImporting === (backup._id || backup.id)}
+                    title="Import backup"
+                  >
+                    {isImporting === (backup._id || backup.id) ? (
+                      <Loader className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            {!isLoading && backups.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No backups found. Create your first backup!
+              </div>
+            )}
+
+            {isLoading && (
+              <div className="text-center py-8">
+                <Loader className="w-6 h-6 animate-spin mx-auto text-gray-500" />
+                <p className="mt-2 text-gray-500">Loading backups...</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

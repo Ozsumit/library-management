@@ -75,14 +75,14 @@ const ExcelToJson: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl py-6 ">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+    <div className="max-w-4xl py-6 bg-gray-900 min-h-screen">
+      <div className="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="px-6 py-4 border-b border-gray-700">
+          <h2 className="text-2xl font-bold text-white">
             Excel to JSON Converter
           </h2>
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-400">
             Upload an Excel file to extract required data and download it as
             JSON.
           </p>
@@ -92,10 +92,10 @@ const ExcelToJson: React.FC = () => {
         <div className="p-6 space-y-6">
           {/* File Upload */}
           <label className="block">
-            <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500">
+            <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-900 border-gray-600 hover:border-gray-500">
               <div className="flex flex-col items-center justify-center pt-5 pb-6">
                 <svg
-                  className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
+                  className="w-8 h-8 mb-4 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -107,13 +107,11 @@ const ExcelToJson: React.FC = () => {
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                   />
                 </svg>
-                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                <p className="mb-2 text-sm text-gray-400">
                   <span className="font-semibold">Click to upload</span> or drag
                   and drop
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Excel files only
-                </p>
+                <p className="text-xs text-gray-400">Excel files only</p>
               </div>
               <input
                 type="file"
@@ -127,53 +125,51 @@ const ExcelToJson: React.FC = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="p-4 text-sm text-red-800 bg-red-100 dark:bg-red-900 dark:text-red-200 rounded-lg">
+            <div className="p-4 text-sm text-red-200 bg-red-900 rounded-lg">
               {error}
             </div>
           )}
 
-          {/* Action Button */}
-
           {/* Data Preview */}
           {studentData.length > 0 && (
-            <div className="border dark:border-gray-700 rounded-lg overflow-hidden">
+            <div className="border border-gray-700 rounded-lg overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
+                <table className="min-w-full divide-y divide-gray-700">
+                  <thead className="bg-gray-800">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         ID
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Class
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Phone
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         Membership Date
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="bg-gray-900 divide-y divide-gray-700">
                     {studentData.slice(0, 10).map((student, index) => (
                       <tr key={index}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {student.id}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {student.name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {student.class}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {student.phone}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-300">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                           {student.membershipDate.split("T")[0]}
                         </td>
                       </tr>
@@ -182,7 +178,7 @@ const ExcelToJson: React.FC = () => {
                 </table>
               </div>
               {studentData.length > 10 && (
-                <div className="px-6 py-3 bg-gray-50 dark:bg-gray-800 text-center text-sm text-gray-500 dark:text-gray-400">
+                <div className="px-6 py-3 bg-gray-800 text-center text-sm text-gray-400">
                   Showing 10 of {studentData.length} rows
                 </div>
               )}{" "}

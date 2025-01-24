@@ -5,7 +5,7 @@ import React from "react";
 
 const HomePage: React.FC = () => {
   return (
-    <main className=" bg-[#111827] h-screen">
+    <main className=" bg-[#111827] h-auto">
       <LibraryManagementSystem />
     </main>
   );
