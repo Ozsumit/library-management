@@ -316,20 +316,17 @@ const LibraryManagementSystem: React.FC = () => {
   };
 
   // Merge data function
+  // Replace the existing mergeData function with this updated version
   const mergeData = <T extends { id: number }>(
     existingData: T[],
     newData: T[]
   ) => {
-    const mergedData: T[] = [];
-    const existingIds = new Set(existingData.map((item) => item.id));
-
-    newData.forEach((item) => {
-      if (!existingIds.has(item.id)) {
-        mergedData.push(item);
-      }
-    });
-
-    return [...existingData, ...mergedData];
+    const dataMap = new Map<number, T>();
+    // First add all existing items to the map
+    existingData.forEach((item) => dataMap.set(item.id, item));
+    // Then overwrite with new data, preserving backup entries
+    newData.forEach((item) => dataMap.set(item.id, item));
+    return Array.from(dataMap.values());
   };
 
   // Enhanced Search Helpers

@@ -48,7 +48,17 @@ const BackupManager = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      setBackups(data as Backup[]);
+
+      // Filter out backups older than 1 month
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1); // Subtract 1 month from the current date
+
+      const filteredBackups = data.filter((backup: Backup) => {
+        const backupDate = new Date(backup.createdAt);
+        return backupDate >= oneMonthAgo; // Keep backups created within the last month
+      });
+
+      setBackups(filteredBackups);
       setLastRefresh(new Date());
     } catch (err) {
       if (err instanceof Error) {
@@ -59,6 +69,45 @@ const BackupManager = () => {
       setIsLoading(false);
     }
     return () => controller.abort();
+  };
+  const deleteOldBackups = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Fetch all backups
+      const response = await fetch("/api/get-backups");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      // Identify backups older than 1 month
+      const oneMonthAgo = new Date();
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1); // Subtract 1 month from the current date
+
+      const oldBackups = data.filter((backup: Backup) => {
+        const backupDate = new Date(backup.createdAt);
+        return backupDate < oneMonthAgo; // Backups older than 1 month
+      });
+
+      // Delete each old backup
+      for (const backup of oldBackups) {
+        await fetch(`/api/get-backups?id=${backup._id || backup.id}`, {
+          method: "DELETE",
+        });
+      }
+
+      // Refresh the backups list
+      setRefreshKey((prev) => prev + 1);
+      toast.success("Old backups deleted successfully!");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(`Failed to delete old backups: ${err.message}`);
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const createBackup = async () => {
@@ -230,21 +279,32 @@ const BackupManager = () => {
     /* Collect your backup data */
   });
   const applyBackupData = async (backupData: any) => {
+    // const db = await getDbConnection(); // Define the db object
+    // const books = await db.collection("books").find({}).toArray();
+    // const users = await db.collection("users").find({}).toArray();
+    // const rentals = await db.collection("rentals").find({}).toArray();
+
+    // Transform into the required format
+    // const transformedBackupData = {
+    //   books,
+    //   users,
+    //   rentals,
+    // };
+
     try {
       const response = await fetch("/api/restore", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          books: backupData.books || [],
-          users: backupData.users || [],
-        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(backupData),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+      if (response.ok) {
+        console.log("Database restored successfully!");
+      } else {
+        console.error("Failed to restore database:", await response.json());
       }
-
       // Refresh all data
       await fetchBackups();
       window.location.reload(); // Force full state refresh
@@ -358,7 +418,7 @@ const BackupManager = () => {
                       <Trash2 className="h-4 w-4" />
                     )}
                   </Button>
-                  <Button
+                  {/* <Button
                     onClick={() => importBackup(backup._id || backup.id || "")}
                     variant="outline"
                     size="icon"
@@ -371,7 +431,7 @@ const BackupManager = () => {
                     ) : (
                       <Upload className="h-4 w-4" />
                     )}
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             ))}
@@ -391,6 +451,20 @@ const BackupManager = () => {
           </div>
         </CardContent>
       </Card>
+      <Button
+        onClick={deleteOldBackups}
+        disabled={isLoading}
+        className="bg-red-800 w-30 m-6 text-white hover:bg-red-700"
+      >
+        {isLoading ? (
+          <>
+            <Loader className="w-4 h-4 mr-2 animate-spin" />
+            Deleting...
+          </>
+        ) : (
+          "Delete Backups Older Than 1 Month"
+        )}
+      </Button>
     </div>
   );
 };

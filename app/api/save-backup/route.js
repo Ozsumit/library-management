@@ -19,13 +19,16 @@ export async function POST(request) {
       );
     }
 
-    // Log the received request
+    // Parse the request body
     const body = await request.json();
+
+    // Log the received request
     console.log(
       "Received backup request with data structure:",
       Object.keys(body?.data || {})
     );
 
+    // Extract the data from the request body
     const { data } = body;
 
     if (!data) {
@@ -35,6 +38,10 @@ export async function POST(request) {
       );
     }
 
+    // Ensure the data contains books, users, and rentals
+    const { books = [], users = [], rentals = [] } = data;
+
+    // Create a timestamp for the backup filename
     const currentDate = new Date();
     const day = String(currentDate.getDate()).padStart(2, "0");
     const time = currentDate.toLocaleTimeString([], {
@@ -42,28 +49,29 @@ export async function POST(request) {
       minute: "2-digit",
     });
 
+    // Prepare the backup data
     const backupData = {
       filename: `backup-${day}-${time}.json`,
       createdAt: currentDate,
-      data: data,
+      data: { books, users, rentals }, // Only include required collections
+      size: JSON.stringify({ books, users, rentals }).length,
     };
 
-    // Attempt MongoDB connection
-    console.log("Attempting MongoDB connection...");
+    // Connect to MongoDB
     const client = await MongoClient.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
-    console.log("Connected to MongoDB, accessing database:", dbName);
     const db = client.db(dbName);
 
-    console.log("Inserting backup data...");
+    // Insert the backup data into the backups collection
     const result = await db.collection("backups").insertOne(backupData);
 
+    // Close the MongoDB connection
     await client.close();
-    console.log("MongoDB connection closed successfully");
 
+    // Return success response
     return NextResponse.json({
       message: "Backup saved successfully",
       backupId: result.insertedId,
