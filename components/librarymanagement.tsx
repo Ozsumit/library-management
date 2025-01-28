@@ -320,31 +320,15 @@ const LibraryManagementSystem: React.FC = () => {
   const mergeData = <T extends { id: number }>(
     existingData: T[],
     newData: T[]
-  ): T[] => {
+  ) => {
     const dataMap = new Map<number, T>();
-
-    // First, add all existing items to the map
+    // First add all existing items to the map
     existingData.forEach((item) => dataMap.set(item.id, item));
-
-    // Then, handle new data
-    newData.forEach((newItem) => {
-      const existingItem = dataMap.get(newItem.id);
-
-      if (existingItem) {
-        // If the ID exists, check if the data is different
-        if (JSON.stringify(existingItem) !== JSON.stringify(newItem)) {
-          // If data is different, create a new entry with a new ID
-          const newId = generateNumericId(Array.from(dataMap.values()));
-          dataMap.set(newId, { ...newItem, id: newId });
-        }
-      } else {
-        // If the ID does not exist, add the new item
-        dataMap.set(newItem.id, newItem);
-      }
-    });
-
+    // Then overwrite with new data, preserving backup entries
+    newData.forEach((item) => dataMap.set(item.id, item));
     return Array.from(dataMap.values());
   };
+
   // Enhanced Search Helpers
   const fuseOptions = {
     includeScore: true,
@@ -1776,188 +1760,218 @@ const LibraryManagementSystem: React.FC = () => {
   );
 
   // Render Rental History Tab
-  const renderRentalHistoryTab = () => (
-    <div className="bg-gray-900 p-6 rounded-lg">
-      <h2 className="text-3xl font-bold mb-6 text-white">Rental History</h2>
-      <button
-        onClick={() => handleExport("rentals")}
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mb-4 transition-colors"
-        title="Export Rental History"
-      >
-        <Download size={18} className="mr-1" /> Export Rental History
-      </button>
+  const renderRentalHistoryTab = () => {
+    // Helper function to determine the color class based on due date proximity
+    const getDueDateColor = (dueDate: Date) => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Normalize today's date to midnight
+      const due = new Date(dueDate);
+      due.setHours(0, 0, 0, 0); // Normalize due date to midnight
+      const diffTime = due.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 3600 * 24)); // Calculate days difference
 
-      <div className="flex flex-col md:flex-row items-center mb-6 space-y-2 md:space-y-0 md:space-x-4">
-        <select
-          value={rentalHistorySearch.type}
-          onChange={(e) =>
-            setRentalHistorySearch({
-              ...rentalHistorySearch,
-              type: e.target.value as "id" | "name",
-            })
-          }
-          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="id">Search by ID</option>
-          <option value="name">Search by Name</option>
-        </select>
-        <input
-          type="text"
-          placeholder={`Enter ${
-            rentalHistorySearch.type === "id" ? "rental ID" : "user name"
-          }`}
-          value={rentalHistorySearch.query}
-          onChange={(e) =>
-            setRentalHistorySearch({
-              ...rentalHistorySearch,
-              query: e.target.value,
-            })
-          }
-          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        />
-        <select
-          value={rentalHistorySearch.sortBy}
-          onChange={(e) =>
-            setRentalHistorySearch({
-              ...rentalHistorySearch,
-              sortBy: e.target.value as
-                | "id"
-                | "rentalDate"
-                | "dueDate"
-                | "returnDate"
-                | "customReturnDate",
-            })
-          }
-          className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-        >
-          <option value="id">Sort by ID</option>
-          <option value="rentalDate">Sort by Rental Date</option>
-          <option value="dueDate">Sort by Due Date</option>
-          <option value="returnDate">Sort by Return Date</option>
-          <option value="customReturnDate">Sort by Custom Return Date</option>
-        </select>
+      if (diffDays <= 1) {
+        // Red for past due, today, or tomorrow
+        return "text-red-500";
+      } else if (diffDays <= 3) {
+        // Orange for 2-3 days remaining
+        return "text-orange-500";
+      } else if (diffDays <= 7) {
+        // Yellow for 4-7 days remaining
+        return "text-yellow-500";
+      } else {
+        // Green for 8+ days remaining
+        return "text-green-500";
+      }
+    };
+
+    return (
+      <div className="bg-gray-900 p-6 rounded-lg">
+        <h2 className="text-3xl font-bold mb-6 text-white">Rental History</h2>
         <button
-          onClick={() =>
-            setRentalHistorySearch({ type: "id", query: "", sortBy: "id" })
-          }
-          className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
+          onClick={() => handleExport("rentals")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 mb-4 transition-colors"
+          title="Export Rental History"
         >
-          Clear
+          <Download size={18} className="mr-1" /> Export Rental History
         </button>
-      </div>
 
-      <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
-        {groupRentalsByUser(searchRentalHistory(rentals)).map((group) => (
-          <div key={group.userId} className="mb-6">
-            <h3 className="text-2xl font-semibold mb-4 text-white">
-              {users.find((user) => user.id === group.userId)?.name ||
-                "Unknown User"}
-            </h3>
-            <div className="bg-gray-800 rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-700">
-                    <th className="p-4 text-left text-white font-medium">
-                      Book
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Rental Date
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Due Date
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Custom Return Date
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Return Date
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Return Time
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Status
-                    </th>
-                    <th className="p-4 text-left text-white font-medium">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.rentals.map((rental) => (
-                    <tr
-                      key={rental.id}
-                      className="border-t border-gray-700 hover:bg-gray-750"
-                    >
-                      <td className="p-4 text-white">
-                        {books.find((book) => book.id === rental.bookId)
-                          ?.title || "Unknown Book"}
-                      </td>
-                      <td className="p-4 text-gray-300">
-                        {new Date(rental.rentalDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-4 text-gray-300">
-                        {new Date(rental.dueDate).toLocaleDateString()}
-                      </td>
-                      <td className="p-4 text-gray-300">
-                        {rental.customReturnDate
-                          ? new Date(
-                              rental.customReturnDate
-                            ).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      <td className="p-4 text-gray-300">
-                        {rental.returnDate
-                          ? new Date(rental.returnDate).toLocaleDateString()
-                          : "N/A"}
-                      </td>
-                      <td className="p-4 text-gray-300">
-                        {rental.returnTime || "N/A"}
-                      </td>
-                      <td className="p-4 text-gray-300">
-                        {rental.returnDate ? (
-                          new Date(rental.returnDate) <=
-                          new Date(rental.dueDate) ? (
-                            <span className="text-green-400">On Time</span>
-                          ) : (
-                            <span className="text-red-400">Late</span>
-                          )
-                        ) : (
-                          "Not Returned"
-                        )}
-                      </td>
-                      <td className="p-4">
-                        <button
-                          className="text-blue-400 hover:text-blue-300 transition-colors ml-2"
-                          onClick={() => {
-                            setSelectedRental(rental);
-                            setIsDeleteRentalModalOpen(true);
-                          }}
+        <div className="flex flex-col md:flex-row items-center mb-6 space-y-2 md:space-y-0 md:space-x-4">
+          <select
+            value={rentalHistorySearch.type}
+            onChange={(e) =>
+              setRentalHistorySearch({
+                ...rentalHistorySearch,
+                type: e.target.value as "id" | "name",
+              })
+            }
+            className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="id">Search by ID</option>
+            <option value="name">Search by Name</option>
+          </select>
+          <input
+            type="text"
+            placeholder={`Enter ${
+              rentalHistorySearch.type === "id" ? "rental ID" : "user name"
+            }`}
+            value={rentalHistorySearch.query}
+            onChange={(e) =>
+              setRentalHistorySearch({
+                ...rentalHistorySearch,
+                query: e.target.value,
+              })
+            }
+            className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          />
+          <select
+            value={rentalHistorySearch.sortBy}
+            onChange={(e) =>
+              setRentalHistorySearch({
+                ...rentalHistorySearch,
+                sortBy: e.target.value as
+                  | "id"
+                  | "rentalDate"
+                  | "dueDate"
+                  | "returnDate"
+                  | "customReturnDate",
+              })
+            }
+            className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2 w-full md:w-auto focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          >
+            <option value="id">Sort by ID</option>
+            <option value="rentalDate">Sort by Rental Date</option>
+            <option value="dueDate">Sort by Due Date</option>
+            <option value="returnDate">Sort by Return Date</option>
+            <option value="customReturnDate">Sort by Custom Return Date</option>
+          </select>
+          <button
+            onClick={() =>
+              setRentalHistorySearch({ type: "id", query: "", sortBy: "id" })
+            }
+            className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg w-full md:w-auto transition-colors"
+          >
+            Clear
+          </button>
+        </div>
+
+        <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+          {groupRentalsByUser(searchRentalHistory(rentals)).map((group) => (
+            <div key={group.userId} className="mb-6">
+              <h3 className="text-2xl font-semibold mb-4 text-white">
+                {users.find((user) => user.id === group.userId)?.name ||
+                  "Unknown User"}
+              </h3>
+              <div className="bg-gray-800 rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-700">
+                      <th className="p-4 text-left text-white font-medium">
+                        Book
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Rental Date
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Due Date
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Custom Return Date
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Return Date
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Return Time
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Status
+                      </th>
+                      <th className="p-4 text-left text-white font-medium">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.rentals.map((rental) => (
+                      <tr
+                        key={rental.id}
+                        className="border-t border-gray-700 hover:bg-gray-750"
+                      >
+                        <td className="p-4 text-white">
+                          {books.find((book) => book.id === rental.bookId)
+                            ?.title || "Unknown Book"}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {new Date(rental.rentalDate).toLocaleDateString()}
+                        </td>
+                        <td
+                          className={`p-4 ${getDueDateColor(
+                            new Date(rental.dueDate)
+                          )}`}
                         >
-                          Delete
-                        </button>
-                        {!rental.returnDate && (
+                          {new Date(rental.dueDate).toLocaleDateString()}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {rental.customReturnDate
+                            ? new Date(
+                                rental.customReturnDate
+                              ).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {rental.returnDate
+                            ? new Date(rental.returnDate).toLocaleDateString()
+                            : "N/A"}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {rental.returnTime || "N/A"}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {rental.returnDate ? (
+                            new Date(rental.returnDate) <=
+                            new Date(rental.dueDate) ? (
+                              <span className="text-green-400">On Time</span>
+                            ) : (
+                              <span className="text-red-400">Late</span>
+                            )
+                          ) : (
+                            "Not Returned"
+                          )}
+                        </td>
+                        <td className="p-4">
                           <button
                             className="text-blue-400 hover:text-blue-300 transition-colors ml-2"
                             onClick={() => {
                               setSelectedRental(rental);
-                              setIsReturnBookModalOpen(true);
+                              setIsDeleteRentalModalOpen(true);
                             }}
                           >
-                            Return
+                            Delete
                           </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                          {!rental.returnDate && (
+                            <button
+                              className="text-blue-400 hover:text-blue-300 transition-colors ml-2"
+                              onClick={() => {
+                                setSelectedRental(rental);
+                                setIsReturnBookModalOpen(true);
+                              }}
+                            >
+                              Return
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render Unreturned Books Tab
   const renderUnreturnedBooksTab = () => (
@@ -2526,23 +2540,19 @@ const LibraryManagementSystem: React.FC = () => {
                         <td className="p-3 border text-white">
                           {new Date(user.membershipDate).toLocaleDateString()}
                         </td>
-                        <td className="px-6 py-4 text-sm space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
+                        <td className="p-3 border text-center">
                           <button
                             onClick={() => {
                               setCurrentUser(user);
                               setIsUserModalOpen(true);
                             }}
-                            className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors w-full md:w-auto"
-
-                            // className="text-blue-500 mr-2 hover:text-blue-600"
+                            className="text-blue-500 mr-2 hover:text-blue-600"
                           >
                             <Edit className="mr-1" /> Edit
                           </button>
                           <button
                             onClick={() => deleteUser(user.id)}
-                            className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
-
-                            // className="text-red-500 hover:text-red-600"
+                            className="text-red-500 hover:text-red-600"
                           >
                             <Trash className="mr-1" /> Delete
                           </button>
@@ -3244,25 +3254,21 @@ const LibraryManagementSystem: React.FC = () => {
                       <td className="px-6 py-4 text-sm text-gray-300">
                         {new Date(user.membershipDate).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4 text-sm space-y-2 md:space-y-0 md:space-x-2 flex flex-col md:flex-row">
+                      <td className="px-6 py-4 text-sm space-x-2">
                         <button
                           onClick={() => {
                             setCurrentUser(user);
                             setIsUserModalOpen(true);
                           }}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors w-full md:w-auto"
-
-                          // className="text-blue-500 mr-2 hover:text-blue-600"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                         >
-                          <Edit className="mr-1" /> Edit
+                          <Edit className="w-4 h-4 mr-1" /> Edit
                         </button>
                         <button
                           onClick={() => deleteUser(user.id)}
-                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors w-full md:w-auto"
-
-                          // className="text-red-500 hover:text-red-600"
+                          className="inline-flex items-center px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                         >
-                          <Trash className="mr-1" /> Delete
+                          <Trash className="w-4 h-4 mr-1" /> Delete
                         </button>
                       </td>
                     </tr>
